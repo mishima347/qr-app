@@ -11,176 +11,333 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    :root {
+      --bg: #eef3f8;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #d8e1ec;
+      --primary: #1a73e8;
+      --primary-dark: #1259b8;
+      --success: #188038;
+      --success-bg: #e8f5eb;
+      --danger: #d93025;
+      --danger-bg: #fdecea;
+      --warning: #f9ab00;
+      --warning-bg: #fff7db;
+      --info-bg: #e8f0fe;
+      --shadow: 0 10px 30px rgba(31, 41, 55, 0.08);
+    }
+
     body {
       margin: 0;
-      font-family: sans-serif;
-      background: #f5f7fb;
-      color: #222;
+      font-family: "Segoe UI", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+      background: linear-gradient(180deg, #eaf2ff 0%, var(--bg) 180px);
+      color: var(--text);
+    }
+
+    .app-header {
+      background: linear-gradient(135deg, #1a73e8, #3b82f6);
+      color: #fff;
+      padding: 20px 16px 24px;
+      box-shadow: 0 6px 20px rgba(26, 115, 232, 0.22);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .header-inner {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .app-title {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .app-subtitle {
+      margin: 8px 0 0;
+      font-size: 14px;
+      opacity: 0.95;
+      line-height: 1.6;
     }
 
     .container {
-      max-width: 760px;
+      max-width: 860px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 18px 16px 32px;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
     }
 
     .card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      margin-top: 20px;
+      background: var(--card);
+      border-radius: 22px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(216, 225, 236, 0.85);
+      margin-top: 18px;
     }
 
-    h1, h2 {
+    .hero-card {
+      padding: 26px 22px;
+    }
+
+    h1, h2, h3 {
       margin-top: 0;
+      margin-bottom: 10px;
+      line-height: 1.35;
+    }
+
+    h1 {
+      font-size: 30px;
+    }
+
+    h2 {
+      font-size: 24px;
+    }
+
+    .top-note {
+      color: var(--muted);
+      line-height: 1.75;
+      white-space: pre-line;
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .section-label {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary);
+      background: #edf4ff;
+      padding: 6px 10px;
+      border-radius: 999px;
+      margin-bottom: 12px;
     }
 
     .field {
-      margin-bottom: 16px;
+      margin-bottom: 18px;
     }
 
     label {
       display: block;
-      font-weight: bold;
+      font-weight: 800;
       margin-bottom: 8px;
+      font-size: 15px;
     }
 
-    input, select, button {
+    input,
+    select,
+    button {
       width: 100%;
       font-size: 18px;
-      padding: 14px;
-      border-radius: 10px;
-      border: 1px solid #cfd6e4;
+      padding: 16px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      transition: 0.18s ease;
+    }
+
+    input,
+    select {
+      background: #fff;
+      color: var(--text);
+      outline: none;
+      min-height: 58px;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.12);
     }
 
     button {
       border: none;
-      background: #1a73e8;
+      background: var(--primary);
       color: #fff;
-      font-weight: bold;
+      font-weight: 800;
       cursor: pointer;
-      margin-top: 10px;
+      box-shadow: 0 6px 14px rgba(26, 115, 232, 0.18);
+      min-height: 60px;
     }
 
-    button.secondary { background: #5f6368; }
-    button.danger { background: #d93025; }
-    button.success { background: #188038; }
-    button.warning { background: #f9ab00; color: #222; }
+    button:hover {
+      transform: translateY(-1px);
+      background: var(--primary-dark);
+    }
 
-    .hidden { display: none !important; }
+    button:active {
+      transform: translateY(0);
+    }
 
-    .info-box {
-      background: #eef4ff;
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 16px;
-      white-space: pre-line;
-      line-height: 1.6;
+    button.secondary {
+      background: #687385;
+      box-shadow: 0 6px 14px rgba(104, 115, 133, 0.16);
+    }
+
+    button.danger {
+      background: var(--danger);
+      box-shadow: 0 6px 14px rgba(217, 48, 37, 0.16);
+    }
+
+    button.success {
+      background: var(--success);
+      box-shadow: 0 6px 14px rgba(24, 128, 56, 0.18);
+    }
+
+    button.warning {
+      background: var(--warning);
+      color: #2a2a2a;
+      box-shadow: 0 6px 14px rgba(249, 171, 0, 0.18);
+    }
+
+    .btn-stack {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
     }
 
     .menu-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
     }
 
-    .section-title {
-      font-size: 20px;
-      font-weight: bold;
-      margin-bottom: 12px;
+    .menu-grid-1 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
     }
 
-    .top-note {
-      color: #555;
-      line-height: 1.6;
+    .hidden {
+      display: none !important;
+    }
+
+    .info-box {
+      background: linear-gradient(180deg, #f2f7ff, #ebf3ff);
+      border: 1px solid #d8e8ff;
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin-bottom: 18px;
       white-space: pre-line;
+      line-height: 1.7;
+      color: #21446c;
+      font-size: 15px;
+    }
+
+    .step-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 16px 0 18px;
+    }
+
+    .step {
+      padding: 12px 10px;
+      background: #f7f9fc;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .step.active {
+      background: #edf4ff;
+      border-color: #bfd5ff;
+      color: var(--primary);
+    }
+
+    .counter-box {
+      margin-top: 16px;
+      background: linear-gradient(135deg, #1a73e8, #4b8dff);
+      color: #fff;
+      padding: 18px 16px;
+      border-radius: 18px;
+      text-align: center;
+      box-shadow: 0 10px 24px rgba(26, 115, 232, 0.2);
+    }
+
+    .counter-label {
+      font-size: 13px;
+      opacity: 0.92;
+      margin-bottom: 6px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .counter-value {
+      font-size: 34px;
+      font-weight: 900;
+      line-height: 1;
     }
 
     .status {
-      margin-top: 12px;
-      padding: 12px;
-      border-radius: 10px;
-      font-weight: bold;
+      margin-top: 14px;
+      padding: 16px 16px;
+      border-radius: 16px;
+      font-weight: 800;
       white-space: pre-line;
+      line-height: 1.65;
+      border: 1px solid transparent;
+      font-size: 15px;
     }
 
     .status.info {
-      background: #eef4ff;
-      color: #1a73e8;
+      background: var(--info-bg);
+      color: #1656b8;
+      border-color: #cddfff;
     }
 
     .status.ok {
-      background: #e6f4ea;
-      color: #137333;
+      background: var(--success-bg);
+      color: #146533;
+      border-color: #cde9d5;
     }
 
     .status.error {
-      background: #fce8e6;
-      color: #c5221f;
+      background: var(--danger-bg);
+      color: #b42318;
+      border-color: #f5c2c0;
     }
 
-    .qr-list {
-      margin-top: 16px;
-      border: 1px solid #d9e2f1;
-      border-radius: 12px;
-      background: #fafcff;
-      overflow: hidden;
-    }
-
-    .qr-list-header {
-      padding: 12px 16px;
-      background: #edf3ff;
-      font-weight: bold;
-    }
-
-    .qr-list-body {
-      max-height: 300px;
-      overflow-y: auto;
-    }
-
-    .qr-row {
-      display: flex;
-      gap: 12px;
-      padding: 12px 16px;
-      border-top: 1px solid #eef2f7;
-      align-items: flex-start;
-    }
-
-    .qr-no {
-      min-width: 48px;
-      color: #5f6368;
-      font-weight: bold;
-    }
-
-    .qr-value {
-      flex: 1;
-      word-break: break-all;
-      font-weight: bold;
-    }
-
-    .confirm-box {
-      margin-top: 16px;
-      padding: 14px;
-      border-radius: 12px;
-      background: #fff8e1;
-      color: #8a5a00;
-      font-weight: bold;
+    .small-note {
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
       white-space: pre-line;
+      background: #f8fafc;
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+      padding: 12px 14px;
     }
 
     .camera-box {
       margin-top: 16px;
-      background: #111;
-      border-radius: 12px;
+      background: #0f172a;
+      border-radius: 20px;
       overflow: hidden;
       position: relative;
+      border: 2px solid #d7e1f0;
     }
 
     video {
       width: 100%;
       display: block;
       background: #000;
+      min-height: 240px;
     }
 
     .camera-guide {
@@ -194,154 +351,382 @@
 
     .camera-guide::before {
       content: "";
-      width: 70%;
-      height: 40%;
-      border: 3px solid rgba(255,255,255,0.92);
+      width: 72%;
+      height: 42%;
+      border: 3px solid rgba(255,255,255,0.96);
+      border-radius: 14px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.22);
+    }
+
+    .camera-caption {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      background: rgba(15, 23, 42, 0.72);
+      color: #fff;
+      font-size: 13px;
+      padding: 10px 12px;
       border-radius: 12px;
-      box-shadow: 0 0 0 9999px rgba(0,0,0,0.18);
-    }
-
-    .small-note {
-      margin-top: 8px;
-      font-size: 14px;
-      color: #666;
       line-height: 1.5;
-      white-space: pre-line;
+      text-align: center;
+      font-weight: 700;
     }
 
-    @media (max-width: 640px) {
+    .qr-list {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fcfdff;
+      overflow: hidden;
+    }
+
+    .qr-list-header {
+      padding: 14px 16px;
+      background: linear-gradient(180deg, #edf4ff, #e8f0ff);
+      font-weight: 900;
+      color: #24456f;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .qr-list-body {
+      max-height: 360px;
+      overflow-y: auto;
+    }
+
+    .qr-row {
+      display: flex;
+      gap: 12px;
+      padding: 14px 16px;
+      border-top: 1px solid #eef2f7;
+      align-items: flex-start;
+      background: #fff;
+    }
+
+    .qr-row:nth-child(even) {
+      background: #fbfdff;
+    }
+
+    .qr-no {
+      min-width: 48px;
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 16px;
+    }
+
+    .qr-value {
+      flex: 1;
+      word-break: break-all;
+      font-weight: 800;
+      line-height: 1.6;
+      font-size: 16px;
+    }
+
+    .confirm-box {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 16px;
+      background: var(--warning-bg);
+      color: #8a5a00;
+      font-weight: 800;
+      white-space: pre-line;
+      line-height: 1.7;
+      border: 1px solid #ffe49c;
+    }
+
+    .inline-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0 0;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      background: #f3f6fb;
+      color: #41536a;
+      border: 1px solid #dde5f0;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.35);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+
+    .loading-overlay.show {
+      display: flex;
+    }
+
+    .loading-card {
+      width: min(360px, 100%);
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.14);
+      padding: 24px 22px;
+      text-align: center;
+    }
+
+    .spinner {
+      width: 42px;
+      height: 42px;
+      border: 4px solid #dce8ff;
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      margin: 0 auto 14px;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .loading-title {
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .loading-text {
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 700px) {
       .menu-grid {
         grid-template-columns: 1fr;
       }
 
       .container {
-        padding: 12px;
+        padding: 14px 12px 28px;
       }
 
-      .card {
-        padding: 16px;
+      .card,
+      .hero-card {
+        padding: 18px 16px;
+        border-radius: 18px;
+      }
+
+      .app-title {
+        font-size: 24px;
+      }
+
+      h1 {
+        font-size: 26px;
+      }
+
+      h2 {
+        font-size: 22px;
+      }
+
+      input,
+      select,
+      button {
+        font-size: 17px;
+        min-height: 56px;
+      }
+
+      .counter-value {
+        font-size: 30px;
+      }
+
+      .step-bar {
+        grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
 <body>
+  <header class="app-header">
+    <div class="header-inner">
+      <h1 class="app-title">QR照合アプリ</h1>
+      <p class="app-subtitle">タブレットでも見やすく、現場で迷いにくい画面にした版です。</p>
+    </div>
+  </header>
+
   <div class="container">
+    <div id="startScreen" class="screen active">
+      <div class="card hero-card">
+        <div class="section-label">はじめに</div>
+        <h2>担当者名と部署を選択してください</h2>
+        <p class="top-note">最初に担当者名と部署を入力します。
+部署によって表示する画面が切り替わります。</p>
 
-    <div id="startScreen" class="card">
-      <h1>現場管理アプリ</h1>
-      <p class="top-note">最初に担当者名と部署を選択してください。
-選択した部署ごとに画面を切り替えます。</p>
+        <div class="inline-chip-row">
+          <span class="chip">① 担当者入力</span>
+          <span class="chip">② 部署選択</span>
+          <span class="chip">③ 業務開始</span>
+        </div>
 
-      <div class="field">
-        <label for="userName">担当者名</label>
-        <input type="text" id="userName" placeholder="例：青山">
-      </div>
+        <div class="field" style="margin-top:18px;">
+          <label for="userName">担当者名</label>
+          <input type="text" id="userName" placeholder="例：青山">
+        </div>
 
-      <div class="field">
-        <label for="department">部署</label>
-        <select id="department">
-          <option value="">選択してください</option>
-          <option value="深絞り">深絞り</option>
-          <option value="カットチーム">カットチーム</option>
-        </select>
-      </div>
+        <div class="field">
+          <label for="department">部署</label>
+          <select id="department">
+            <option value="">選択してください</option>
+            <option value="深絞り">深絞り</option>
+            <option value="カットチーム">カットチーム</option>
+          </select>
+        </div>
 
-      <button onclick="goToDepartmentScreen()">開始する</button>
-    </div>
-
-    <div id="deepDrawScreen" class="card hidden">
-      <h2>深絞り 画面</h2>
-      <div id="deepDrawInfo" class="info-box"></div>
-      <div class="menu-grid">
-        <button onclick="alert('深絞り用の機能はあとで追加できます')">機能1</button>
-        <button onclick="alert('深絞り用の機能はあとで追加できます')">機能2</button>
-        <button class="secondary" onclick="backToStart()">最初に戻る</button>
-      </div>
-    </div>
-
-    <div id="cutTeamScreen" class="card hidden">
-      <h2>カットチーム 画面</h2>
-      <div id="cutTeamInfo" class="info-box"></div>
-
-      <div class="menu-grid">
-        <button onclick="openCutNewRegister()">QR新規登録</button>
-        <button onclick="openCutReRegister()">再登録</button>
-        <button class="secondary" onclick="backToStart()">最初に戻る</button>
+        <div class="btn-stack">
+          <button onclick="goToDepartmentScreen()">開始する</button>
+        </div>
       </div>
     </div>
 
-    <div id="cutNewRegisterScreen" class="card hidden">
-      <h2>カットチーム - QR新規登録</h2>
-      <div id="cutNewRegisterInfo" class="info-box"></div>
+    <div id="deepDrawScreen" class="screen">
+      <div class="card">
+        <div class="section-label">深絞り</div>
+        <h2>深絞り 画面</h2>
+        <div id="deepDrawInfo" class="info-box"></div>
 
-      <div class="field">
-        <label for="mousseType">ムースの種類</label>
-        <select id="mousseType">
-          <option value="">読み込み中...</option>
-        </select>
+        <div class="menu-grid">
+          <button onclick="alert('深絞り用の機能はあとで追加できます')">機能1</button>
+          <button onclick="alert('深絞り用の機能はあとで追加できます')">機能2</button>
+          <button class="secondary" onclick="backToStart()">最初に戻る</button>
+        </div>
       </div>
+    </div>
 
-      <div class="field">
-        <label for="lotNo">Lot</label>
-        <input type="text" id="lotNo" placeholder="例：20260415A">
+    <div id="cutTeamScreen" class="screen">
+      <div class="card">
+        <div class="section-label">カットチーム</div>
+        <h2>カットチーム 画面</h2>
+        <div id="cutTeamInfo" class="info-box"></div>
+
+        <div class="step-bar">
+          <div class="step active">① メニュー選択</div>
+          <div class="step">② QR読取</div>
+          <div class="step">③ 保存</div>
+        </div>
+
+        <div class="menu-grid">
+          <button onclick="openCutNewRegister()">QR新規登録</button>
+          <button onclick="openCutReRegister()">再登録</button>
+          <button class="secondary" onclick="backToStart()">最初に戻る</button>
+        </div>
       </div>
+    </div>
 
-      <div class="menu-grid">
-        <button onclick="startCameraScan()">QRを追加（カメラ起動）</button>
-        <button class="danger" onclick="stopCameraScan()">カメラ停止</button>
-      </div>
+    <div id="cutNewRegisterScreen" class="screen">
+      <div class="card">
+        <div class="section-label">QR新規登録</div>
+        <h2>カットチーム - QR新規登録</h2>
+        <div id="cutNewRegisterInfo" class="info-box"></div>
 
-      <div class="small-note">GitHub Pages側でカメラを起動します。
+        <div class="step-bar">
+          <div class="step active">① 条件入力</div>
+          <div class="step active">② QR読取</div>
+          <div class="step">③ 保存</div>
+        </div>
+
+        <div class="field">
+          <label for="mousseType">ムースの種類</label>
+          <select id="mousseType">
+            <option value="">読み込み中...</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="lotNo">Lot</label>
+          <input type="text" id="lotNo" placeholder="例：20260415A">
+        </div>
+
+        <div class="counter-box">
+          <div class="counter-label">現在の読み取り件数</div>
+          <div class="counter-value" id="qrCounter">0件</div>
+        </div>
+
+        <div class="btn-stack">
+          <button onclick="startCameraScan()">カメラを起動して読み取る</button>
+          <button class="danger" onclick="stopCameraScan()">カメラを停止する</button>
+        </div>
+
+        <div class="small-note">GitHub Pages側でカメラを起動します。
 QRを枠内にかざすと連続で読み取ります。
 同じQRを再度読み取った場合は警告表示します。</div>
 
-      <div class="camera-box hidden" id="cameraBox">
-        <video id="video" autoplay playsinline muted></video>
-        <canvas id="scanCanvas" class="hidden"></canvas>
-        <div class="camera-guide"></div>
+        <div class="camera-box hidden" id="cameraBox">
+          <video id="video" autoplay playsinline muted></video>
+          <canvas id="scanCanvas" class="hidden"></canvas>
+          <div class="camera-guide"></div>
+          <div class="camera-caption">QRコードを白い枠の中に大きく合わせてください</div>
+        </div>
+
+        <div class="field" style="margin-top:16px;">
+          <label for="qrInput">手動入力欄（予備）</label>
+          <input
+            type="text"
+            id="qrInput"
+            placeholder="カメラが使えない場合はここに入力して Enter"
+            onkeydown="handleQrInput(event)"
+          >
+        </div>
+
+        <div class="menu-grid">
+          <button onclick="addQrFromInput()">手動でQRを追加</button>
+          <button class="danger" onclick="clearQrList()">QR一覧をクリア</button>
+          <button class="warning" onclick="showRegisterConfirm()">登録内容を確認する</button>
+          <button class="success" onclick="saveRegisterLog()">ログへ記録する</button>
+          <button class="secondary" onclick="backToCutMenu()">カットチームメニューに戻る</button>
+        </div>
+
+        <div id="qrStatus" class="status info">QRを読み取るとここに結果が表示されます。</div>
+
+        <div class="qr-list">
+          <div class="qr-list-header">
+            <span>読み取り済みQR一覧</span>
+            <span id="qrListCountText">0件</span>
+          </div>
+          <div id="qrListBody" class="qr-list-body"></div>
+        </div>
+
+        <div id="registerConfirmBox" class="confirm-box hidden"></div>
       </div>
-
-      <div class="field" style="margin-top:16px;">
-        <label for="qrInput">手動入力欄（予備）</label>
-        <input
-          type="text"
-          id="qrInput"
-          placeholder="カメラが使えない場合はここに入力して Enter"
-          onkeydown="handleQrInput(event)"
-        >
-      </div>
-
-      <button onclick="addQrFromInput()">手動でQRを追加</button>
-      <button class="danger" onclick="clearQrList()">QR一覧をクリア</button>
-      <button class="warning" onclick="showRegisterConfirm()">登録内容を確認する</button>
-      <button class="success" onclick="saveRegisterLog()">ログへ記録する</button>
-      <button class="secondary" onclick="backToCutMenu()">カットチームメニューに戻る</button>
-
-      <div id="qrStatus" class="status info">QRを読み取るとここに結果が表示されます。</div>
-
-      <div class="qr-list">
-        <div class="qr-list-header">読み取り済みQR一覧</div>
-        <div id="qrListBody" class="qr-list-body"></div>
-      </div>
-
-      <div id="registerConfirmBox" class="confirm-box hidden"></div>
     </div>
 
-    <div id="cutReRegisterScreen" class="card hidden">
-      <h2>カットチーム - 再登録</h2>
-      <div id="cutReRegisterInfo" class="info-box"></div>
-      <p class="top-note">ここは再登録用画面です。
+    <div id="cutReRegisterScreen" class="screen">
+      <div class="card">
+        <div class="section-label">再登録</div>
+        <h2>カットチーム - 再登録</h2>
+        <div id="cutReRegisterInfo" class="info-box"></div>
+        <p class="top-note">ここは再登録用画面です。
 今は画面だけ作成しています。</p>
-      <div class="menu-grid">
-        <button onclick="alert('再登録画面の詳細機能はあとで追加します')">再登録を開始</button>
-        <button class="secondary" onclick="backToCutMenu()">カットチームメニューに戻る</button>
+        <div class="menu-grid">
+          <button onclick="alert('再登録画面の詳細機能はあとで追加します')">再登録を開始</button>
+          <button class="secondary" onclick="backToCutMenu()">カットチームメニューに戻る</button>
+        </div>
       </div>
     </div>
+  </div>
 
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-card">
+      <div class="spinner"></div>
+      <div class="loading-title" id="loadingTitle">処理中です</div>
+      <div class="loading-text" id="loadingText">しばらくお待ちください。</div>
+    </div>
   </div>
 
   <script>
-    // ====== ここを自分のApps Script WebアプリURLに置き換える ======
     const GAS_BASE_URL = 'https://script.google.com/macros/s/AKfycbzWEkXEYZmto9rIwJ2nrfnkN1pjgmhnwOXr6jgYp2eN8p5UiD1vERPS7nk13eBEekcd/exec';
 
     let currentUserName = '';
@@ -355,12 +740,21 @@ QRを枠内にかざすと連続で読み取ります。
     let lastDetectedAt = 0;
     let audioContext = null;
 
-    function hideAllScreens() {
-      document.getElementById('startScreen').classList.add('hidden');
-      document.getElementById('deepDrawScreen').classList.add('hidden');
-      document.getElementById('cutTeamScreen').classList.add('hidden');
-      document.getElementById('cutNewRegisterScreen').classList.add('hidden');
-      document.getElementById('cutReRegisterScreen').classList.add('hidden');
+    function showScreen(screenId) {
+      const screens = document.querySelectorAll('.screen');
+      screens.forEach(screen => screen.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showLoading(title, text) {
+      document.getElementById('loadingTitle').textContent = title || '処理中です';
+      document.getElementById('loadingText').textContent = text || 'しばらくお待ちください。';
+      document.getElementById('loadingOverlay').classList.add('show');
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('show');
     }
 
     function getErrorMessage(err) {
@@ -381,6 +775,12 @@ QRを枠内にかざすと連続で読み取ります。
       } else {
         status.classList.add('info');
       }
+    }
+
+    function updateCounter() {
+      const countText = scannedQrList.length + '件';
+      document.getElementById('qrCounter').textContent = countText;
+      document.getElementById('qrListCountText').textContent = countText;
     }
 
     function jsonpRequest(params) {
@@ -433,6 +833,9 @@ QRを枠内にかざすと連続で読み取ります。
 
     async function loadMousseTypes() {
       try {
+        setQrStatus('ムース種類を取得中...', 'info');
+        showLoading('ムース種類を取得中', 'マスタシートから候補を読み込んでいます。');
+
         const res = await jsonpRequest({
           action: 'getMousseTypes'
         });
@@ -455,10 +858,14 @@ QRを枠内にかざすと連続で読み取ります。
           option.textContent = type;
           select.appendChild(option);
         });
+
+        setQrStatus('ムース種類を取得しました。', 'ok');
       } catch (err) {
         setQrStatus('ムース種類の取得に失敗しました。\n' + getErrorMessage(err), 'error');
         const select = document.getElementById('mousseType');
         select.innerHTML = '<option value="">取得失敗</option>';
+      } finally {
+        hideLoading();
       }
     }
 
@@ -479,50 +886,44 @@ QRを枠内にかざすと連続で読み取ります。
       currentUserName = userName;
       currentDepartment = department;
 
-      hideAllScreens();
-
       if (department === '深絞り') {
         document.getElementById('deepDrawInfo').textContent =
           '担当者：' + currentUserName + '\n部署：' + currentDepartment;
-        document.getElementById('deepDrawScreen').classList.remove('hidden');
+        showScreen('deepDrawScreen');
       } else if (department === 'カットチーム') {
         document.getElementById('cutTeamInfo').textContent =
           '担当者：' + currentUserName + '\n部署：' + currentDepartment;
-        document.getElementById('cutTeamScreen').classList.remove('hidden');
+        showScreen('cutTeamScreen');
       }
     }
 
     function backToStart() {
       stopCameraScan();
-      hideAllScreens();
-      document.getElementById('startScreen').classList.remove('hidden');
+      showScreen('startScreen');
     }
 
     function backToCutMenu() {
       stopCameraScan();
-      hideAllScreens();
       document.getElementById('cutTeamInfo').textContent =
         '担当者：' + currentUserName + '\n部署：' + currentDepartment;
-      document.getElementById('cutTeamScreen').classList.remove('hidden');
+      showScreen('cutTeamScreen');
     }
 
     function openCutNewRegister() {
-      hideAllScreens();
       document.getElementById('cutNewRegisterInfo').textContent =
         '担当者：' + currentUserName + '\n部署：' + currentDepartment + '\nモード：QR新規登録';
-      document.getElementById('cutNewRegisterScreen').classList.remove('hidden');
       document.getElementById('registerConfirmBox').classList.add('hidden');
       document.getElementById('registerConfirmBox').textContent = '';
+      showScreen('cutNewRegisterScreen');
       loadMousseTypes();
       renderQrList();
     }
 
     function openCutReRegister() {
       stopCameraScan();
-      hideAllScreens();
       document.getElementById('cutReRegisterInfo').textContent =
         '担当者：' + currentUserName + '\n部署：' + currentDepartment + '\nモード：再登録';
-      document.getElementById('cutReRegisterScreen').classList.remove('hidden');
+      showScreen('cutReRegisterScreen');
     }
 
     function handleQrInput(event) {
@@ -671,8 +1072,8 @@ QRを枠内にかざすと連続で読み取ります。
             canvas.height = height;
             ctx.drawImage(video, 0, 0, width, height);
 
-            const guideWidth = Math.floor(width * 0.7);
-            const guideHeight = Math.floor(height * 0.4);
+            const guideWidth = Math.floor(width * 0.72);
+            const guideHeight = Math.floor(height * 0.42);
             const sx = Math.floor((width - guideWidth) / 2);
             const sy = Math.floor((height - guideHeight) / 2);
 
@@ -766,6 +1167,8 @@ QRを枠内にかざすと連続で読み取ります。
     function renderQrList() {
       const body = document.getElementById('qrListBody');
       body.innerHTML = '';
+
+      updateCounter();
 
       if (scannedQrList.length === 0) {
         body.innerHTML = '<div class="qr-row"><span class="qr-value">まだQRはありません</span></div>';
@@ -862,6 +1265,7 @@ QRを枠内にかざすと連続で読み取ります。
 
       try {
         setQrStatus('保存前の重複チェック中...', 'info');
+        showLoading('保存前チェック中', 'ログシートに同じQRがないか確認しています。');
 
         const checkRes = await jsonpRequest({
           action: 'checkExistingQrCodes',
@@ -882,6 +1286,7 @@ QRを枠内にかざすと連続で読み取ります。
         }
 
         setQrStatus('ログへ記録中...', 'info');
+        showLoading('ログへ記録中', 'スプレッドシートへ保存しています。');
 
         const saveRes = await jsonpRequest({
           action: 'saveCutTeamNewRegisterLog',
@@ -915,6 +1320,8 @@ QRを枠内にかざすと連続で読み取ります。
 
       } catch (err) {
         setQrStatus('保存エラー\n' + getErrorMessage(err), 'error');
+      } finally {
+        hideLoading();
       }
     }
 
