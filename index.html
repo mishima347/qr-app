@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>QR照合アプリ</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #f5f7fb;
+      color: #222;
+    }
+
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      margin-top: 20px;
+    }
+
+    h1, h2 {
+      margin-top: 0;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    input, select, button {
+      width: 100%;
+      font-size: 18px;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid #cfd6e4;
+    }
+
+    button {
+      border: none;
+      background: #1a73e8;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button.secondary { background: #5f6368; }
+    button.danger { background: #d93025; }
+    button.success { background: #188038; }
+    button.warning { background: #f9ab00; color: #222; }
+
+    .hidden { display: none !important; }
+
+    .info-box {
+      background: #eef4ff;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 16px;
+      white-space: pre-line;
+      line-height: 1.6;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .top-note {
+      color: #555;
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+
+    .status {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 10px;
+      font-weight: bold;
+      white-space: pre-line;
+    }
+
+    .status.info {
+      background: #eef4ff;
+      color: #1a73e8;
+    }
+
+    .status.ok {
+      background: #e6f4ea;
+      color: #137333;
+    }
+
+    .status.error {
+      background: #fce8e6;
+      color: #c5221f;
+    }
+
+    .qr-list {
+      margin-top: 16px;
+      border: 1px solid #d9e2f1;
+      border-radius: 12px;
+      background: #fafcff;
+      overflow: hidden;
+    }
+
+    .qr-list-header {
+      padding: 12px 16px;
+      background: #edf3ff;
+      font-weight: bold;
+    }
+
+    .qr-list-body {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .qr-row {
+      display: flex;
+      gap: 12px;
+      padding: 12px 16px;
+      border-top: 1px solid #eef2f7;
+      align-items: flex-start;
+    }
+
+    .qr-no {
+      min-width: 48px;
+      color: #5f6368;
+      font-weight: bold;
+    }
+
+    .qr-value {
+      flex: 1;
+      word-break: break-all;
+      font-weight: bold;
+    }
+
+    .confirm-box {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 12px;
+      background: #fff8e1;
+      color: #8a5a00;
+      font-weight: bold;
+      white-space: pre-line;
+    }
+
+    .camera-box {
+      margin-top: 16px;
+      background: #111;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    video {
+      width: 100%;
+      display: block;
+      background: #000;
+    }
+
+    .camera-guide {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .camera-guide::before {
+      content: "";
+      width: 70%;
+      height: 40%;
+      border: 3px solid rgba(255,255,255,0.92);
+      border-radius: 12px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.18);
+    }
+
+    .small-note {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #666;
+      line-height: 1.5;
+      white-space: pre-line;
+    }
+
+    @media (max-width: 640px) {
+      .menu-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .container {
+        padding: 12px;
+      }
+
+      .card {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div id="startScreen" class="card">
+      <h1>現場管理アプリ</h1>
+      <p class="top-note">最初に担当者名と部署を選択してください。
+選択した部署ごとに画面を切り替えます。</p>
+
+      <div class="field">
+        <label for="userName">担当者名</label>
+        <input type="text" id="userName" placeholder="例：青山">
+      </div>
+
+      <div class="field">
+        <label for="department">部署</label>
+        <select id="department">
+          <option value="">選択してください</option>
+          <option value="深絞り">深絞り</option>
+          <option value="カットチーム">カットチーム</option>
+        </select>
+      </div>
+
+      <button onclick="goToDepartmentScreen()">開始する</button>
+    </div>
+
+    <div id="deepDrawScreen" class="card hidden">
+      <h2>深絞り 画面</h2>
+      <div id="deepDrawInfo" class="info-box"></div>
+      <div class="menu-grid">
+        <button onclick="alert('深絞り用の機能はあとで追加できます')">機能1</button>
+        <button onclick="alert('深絞り用の機能はあとで追加できます')">機能2</button>
+        <button class="secondary" onclick="backToStart()">最初に戻る</button>
+      </div>
+    </div>
+
+    <div id="cutTeamScreen" class="card hidden">
+      <h2>カットチーム 画面</h2>
+      <div id="cutTeamInfo" class="info-box"></div>
+
+      <div class="menu-grid">
+        <button onclick="openCutNewRegister()">QR新規登録</button>
+        <button onclick="openCutReRegister()">再登録</button>
+        <button class="secondary" onclick="backToStart()">最初に戻る</button>
+      </div>
+    </div>
+
+    <div id="cutNewRegisterScreen" class="card hidden">
+      <h2>カットチーム - QR新規登録</h2>
+      <div id="cutNewRegisterInfo" class="info-box"></div>
+
+      <div class="field">
+        <label for="mousseType">ムースの種類</label>
+        <select id="mousseType">
+          <option value="">読み込み中...</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="lotNo">Lot</label>
+        <input type="text" id="lotNo" placeholder="例：20260415A">
+      </div>
+
+      <div class="menu-grid">
+        <button onclick="startCameraScan()">QRを追加（カメラ起動）</button>
+        <button class="danger" onclick="stopCameraScan()">カメラ停止</button>
+      </div>
+
+      <div class="small-note">GitHub Pages側でカメラを起動します。
+QRを枠内にかざすと連続で読み取ります。
+同じQRを再度読み取った場合は警告表示します。</div>
+
+      <div class="camera-box hidden" id="cameraBox">
+        <video id="video" autoplay playsinline muted></video>
+        <canvas id="scanCanvas" class="hidden"></canvas>
+        <div class="camera-guide"></div>
+      </div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="qrInput">手動入力欄（予備）</label>
+        <input
+          type="text"
+          id="qrInput"
+          placeholder="カメラが使えない場合はここに入力して Enter"
+          onkeydown="handleQrInput(event)"
+        >
+      </div>
+
+      <button onclick="addQrFromInput()">手動でQRを追加</button>
+      <button class="danger" onclick="clearQrList()">QR一覧をクリア</button>
+      <button class="warning" onclick="showRegisterConfirm()">登録内容を確認する</button>
+      <button class="success" onclick="saveRegisterLog()">ログへ記録する</button>
+      <button class="secondary" onclick="backToCutMenu()">カットチームメニューに戻る</button>
+
+      <div id="qrStatus" class="status info">QRを読み取るとここに結果が表示されます。</div>
+
+      <div class="qr-list">
+        <div class="qr-list-header">読み取り済みQR一覧</div>
+        <div id="qrListBody" class="qr-list-body"></div>
+      </div>
+
+      <div id="registerConfirmBox" class="confirm-box hidden"></div>
+    </div>
+
+    <div id="cutReRegisterScreen" class="card hidden">
+      <h2>カットチーム - 再登録</h2>
+      <div id="cutReRegisterInfo" class="info-box"></div>
+      <p class="top-note">ここは再登録用画面です。
+今は画面だけ作成しています。</p>
+      <div class="menu-grid">
+        <button onclick="alert('再登録画面の詳細機能はあとで追加します')">再登録を開始</button>
+        <button class="secondary" onclick="backToCutMenu()">カットチームメニューに戻る</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ====== ここを自分のApps Script WebアプリURLに置き換える ======
+    const GAS_BASE_URL = 'https://script.google.com/macros/s/AKfycbzZi_-rqWS6B4aFZxPXLfJ3y5ag57TNlzXiIZavAL5aBtMeHTvE7ysFFtBPrsnwYYNm/exec';
+
+    let currentUserName = '';
+    let currentDepartment = '';
+    let scannedQrList = [];
+
+    let videoStream = null;
+    let scanTimer = null;
+    let isScanning = false;
+    let lastDetectedCode = '';
+    let lastDetectedAt = 0;
+    let audioContext = null;
+
+    function hideAllScreens() {
+      document.getElementById('startScreen').classList.add('hidden');
+      document.getElementById('deepDrawScreen').classList.add('hidden');
+      document.getElementById('cutTeamScreen').classList.add('hidden');
+      document.getElementById('cutNewRegisterScreen').classList.add('hidden');
+      document.getElementById('cutReRegisterScreen').classList.add('hidden');
+    }
+
+    function getErrorMessage(err) {
+      if (!err) return '不明なエラーです。';
+      if (typeof err === 'string') return err;
+      return err.message || JSON.stringify(err);
+    }
+
+    function setQrStatus(message, type) {
+      const status = document.getElementById('qrStatus');
+      status.textContent = message;
+      status.className = 'status';
+
+      if (type === 'ok') {
+        status.classList.add('ok');
+      } else if (type === 'error') {
+        status.classList.add('error');
+      } else {
+        status.classList.add('info');
+      }
+    }
+
+    function jsonpRequest(params) {
+      return new Promise((resolve, reject) => {
+        const callbackName = 'jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+
+        params.callback = callbackName;
+
+        const url = GAS_BASE_URL + '?' + new URLSearchParams(params).toString();
+        const script = document.createElement('script');
+
+        let finished = false;
+
+        const cleanup = () => {
+          try {
+            delete window[callbackName];
+          } catch (e) {}
+          if (script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+        };
+
+        const timer = setTimeout(() => {
+          if (finished) return;
+          finished = true;
+          cleanup();
+          reject(new Error('通信がタイムアウトしました。'));
+        }, 15000);
+
+        window[callbackName] = function(data) {
+          if (finished) return;
+          finished = true;
+          clearTimeout(timer);
+          cleanup();
+          resolve(data);
+        };
+
+        script.onerror = function() {
+          if (finished) return;
+          finished = true;
+          clearTimeout(timer);
+          cleanup();
+          reject(new Error('通信に失敗しました。'));
+        };
+
+        script.src = url;
+        document.body.appendChild(script);
+      });
+    }
+
+    async function loadMousseTypes() {
+      try {
+        const res = await jsonpRequest({
+          action: 'getMousseTypes'
+        });
+
+        const select = document.getElementById('mousseType');
+        select.innerHTML = '';
+
+        const firstOption = document.createElement('option');
+        firstOption.value = '';
+        firstOption.textContent = '選択してください';
+        select.appendChild(firstOption);
+
+        if (!res.success) {
+          throw new Error(res.message || 'ムース種類の取得に失敗しました。');
+        }
+
+        (res.types || []).forEach(type => {
+          const option = document.createElement('option');
+          option.value = type;
+          option.textContent = type;
+          select.appendChild(option);
+        });
+      } catch (err) {
+        setQrStatus('ムース種類の取得に失敗しました。\n' + getErrorMessage(err), 'error');
+        const select = document.getElementById('mousseType');
+        select.innerHTML = '<option value="">取得失敗</option>';
+      }
+    }
+
+    function goToDepartmentScreen() {
+      const userName = document.getElementById('userName').value.trim();
+      const department = document.getElementById('department').value;
+
+      if (!userName) {
+        alert('担当者名を入力してください。');
+        return;
+      }
+
+      if (!department) {
+        alert('部署を選択してください。');
+        return;
+      }
+
+      currentUserName = userName;
+      currentDepartment = department;
+
+      hideAllScreens();
+
+      if (department === '深絞り') {
+        document.getElementById('deepDrawInfo').textContent =
+          '担当者：' + currentUserName + '\n部署：' + currentDepartment;
+        document.getElementById('deepDrawScreen').classList.remove('hidden');
+      } else if (department === 'カットチーム') {
+        document.getElementById('cutTeamInfo').textContent =
+          '担当者：' + currentUserName + '\n部署：' + currentDepartment;
+        document.getElementById('cutTeamScreen').classList.remove('hidden');
+      }
+    }
+
+    function backToStart() {
+      stopCameraScan();
+      hideAllScreens();
+      document.getElementById('startScreen').classList.remove('hidden');
+    }
+
+    function backToCutMenu() {
+      stopCameraScan();
+      hideAllScreens();
+      document.getElementById('cutTeamInfo').textContent =
+        '担当者：' + currentUserName + '\n部署：' + currentDepartment;
+      document.getElementById('cutTeamScreen').classList.remove('hidden');
+    }
+
+    function openCutNewRegister() {
+      hideAllScreens();
+      document.getElementById('cutNewRegisterInfo').textContent =
+        '担当者：' + currentUserName + '\n部署：' + currentDepartment + '\nモード：QR新規登録';
+      document.getElementById('cutNewRegisterScreen').classList.remove('hidden');
+      document.getElementById('registerConfirmBox').classList.add('hidden');
+      document.getElementById('registerConfirmBox').textContent = '';
+      loadMousseTypes();
+      renderQrList();
+    }
+
+    function openCutReRegister() {
+      stopCameraScan();
+      hideAllScreens();
+      document.getElementById('cutReRegisterInfo').textContent =
+        '担当者：' + currentUserName + '\n部署：' + currentDepartment + '\nモード：再登録';
+      document.getElementById('cutReRegisterScreen').classList.remove('hidden');
+    }
+
+    function handleQrInput(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        addQrFromInput();
+      }
+    }
+
+    function validateBeforeScan() {
+      const mousseType = document.getElementById('mousseType').value;
+      const lotNo = document.getElementById('lotNo').value.trim();
+
+      if (!mousseType) {
+        setQrStatus('先にムースの種類を選択してください。', 'error');
+        return false;
+      }
+
+      if (!lotNo) {
+        setQrStatus('先にLotを入力してください。', 'error');
+        return false;
+      }
+
+      return true;
+    }
+
+    function playBeep() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+
+        if (!audioContext) {
+          audioContext = new AudioCtx();
+        }
+
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.type = 'sine';
+        oscillator.frequency.value = 880;
+        gainNode.gain.value = 0.05;
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.08);
+      } catch (e) {}
+    }
+
+    function vibrateShort() {
+      try {
+        if (navigator.vibrate) {
+          navigator.vibrate(120);
+        }
+      } catch (e) {}
+    }
+
+    async function startCameraScan() {
+      if (!validateBeforeScan()) return;
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setQrStatus('この端末・ブラウザはカメラ機能に対応していません。', 'error');
+        return;
+      }
+
+      try {
+        stopCameraScan();
+
+        let stream = null;
+
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: 'environment' },
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            },
+            audio: false
+          });
+        } catch (firstErr) {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false
+          });
+        }
+
+        videoStream = stream;
+
+        const video = document.getElementById('video');
+        video.srcObject = videoStream;
+        document.getElementById('cameraBox').classList.remove('hidden');
+
+        await video.play();
+
+        isScanning = true;
+        setQrStatus('カメラを起動しました。QRを枠内にかざしてください。', 'info');
+        scanLoop();
+      } catch (err) {
+        setQrStatus(
+          'カメラ起動に失敗しました。\n' + getErrorMessage(err),
+          'error'
+        );
+      }
+    }
+
+    function stopCameraScan() {
+      isScanning = false;
+
+      if (scanTimer) {
+        clearTimeout(scanTimer);
+        scanTimer = null;
+      }
+
+      const video = document.getElementById('video');
+
+      if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+      }
+
+      if (video) {
+        try {
+          video.pause();
+        } catch (e) {}
+        video.srcObject = null;
+      }
+
+      document.getElementById('cameraBox').classList.add('hidden');
+    }
+
+    function scanLoop() {
+      if (!isScanning) return;
+
+      const video = document.getElementById('video');
+      const canvas = document.getElementById('scanCanvas');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+      try {
+        if (video.readyState >= 2) {
+          const width = video.videoWidth;
+          const height = video.videoHeight;
+
+          if (width > 0 && height > 0) {
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(video, 0, 0, width, height);
+
+            const guideWidth = Math.floor(width * 0.7);
+            const guideHeight = Math.floor(height * 0.4);
+            const sx = Math.floor((width - guideWidth) / 2);
+            const sy = Math.floor((height - guideHeight) / 2);
+
+            const imageData = ctx.getImageData(sx, sy, guideWidth, guideHeight);
+            const code = jsQR(imageData.data, guideWidth, guideHeight);
+
+            if (code && code.data) {
+              const rawValue = String(code.data || '').trim();
+              if (rawValue) {
+                handleScannedQr(rawValue);
+              }
+            }
+          }
+        }
+      } catch (err) {}
+
+      scanTimer = setTimeout(scanLoop, 250);
+    }
+
+    function handleScannedQr(qrValue) {
+      const now = Date.now();
+
+      if (lastDetectedCode === qrValue && (now - lastDetectedAt) < 1500) {
+        return;
+      }
+
+      lastDetectedCode = qrValue;
+      lastDetectedAt = now;
+
+      addQrValue(qrValue, true);
+    }
+
+    function addQrFromInput() {
+      const qrInput = document.getElementById('qrInput');
+      const qrValue = qrInput.value.trim();
+
+      if (!qrValue) {
+        setQrStatus('QRコードが空です。', 'error');
+        return;
+      }
+
+      addQrValue(qrValue, false);
+      qrInput.value = '';
+      qrInput.focus();
+    }
+
+    function addQrValue(qrValue, fromCamera) {
+      const mousseType = document.getElementById('mousseType').value;
+      const lotNo = document.getElementById('lotNo').value.trim();
+      const confirmBox = document.getElementById('registerConfirmBox');
+
+      confirmBox.classList.add('hidden');
+      confirmBox.textContent = '';
+
+      if (!mousseType) {
+        setQrStatus('先にムースの種類を選択してください。', 'error');
+        return;
+      }
+
+      if (!lotNo) {
+        setQrStatus('先にLotを入力してください。', 'error');
+        return;
+      }
+
+      if (!qrValue) {
+        setQrStatus('QRコードが空です。', 'error');
+        return;
+      }
+
+      if (scannedQrList.includes(qrValue)) {
+        setQrStatus('警告：このQRコードは今回の読み取り一覧に既に存在します。\n' + qrValue, 'error');
+        return;
+      }
+
+      scannedQrList.push(qrValue);
+      renderQrList();
+      playBeep();
+      vibrateShort();
+
+      setQrStatus(
+        'QRを追加しました。\n' +
+        '読取方法：' + (fromCamera ? 'カメラ' : '手動入力') + '\n' +
+        'ムース種類：' + mousseType + '\n' +
+        'Lot：' + lotNo + '\n' +
+        'QR：' + qrValue + '\n' +
+        '現在件数：' + scannedQrList.length + '件',
+        'ok'
+      );
+    }
+
+    function renderQrList() {
+      const body = document.getElementById('qrListBody');
+      body.innerHTML = '';
+
+      if (scannedQrList.length === 0) {
+        body.innerHTML = '<div class="qr-row"><span class="qr-value">まだQRはありません</span></div>';
+        return;
+      }
+
+      scannedQrList.forEach((qr, index) => {
+        const row = document.createElement('div');
+        row.className = 'qr-row';
+
+        const no = document.createElement('div');
+        no.className = 'qr-no';
+        no.textContent = String(index + 1);
+
+        const value = document.createElement('div');
+        value.className = 'qr-value';
+        value.textContent = qr;
+
+        row.appendChild(no);
+        row.appendChild(value);
+        body.appendChild(row);
+      });
+    }
+
+    function clearQrList() {
+      if (scannedQrList.length === 0) {
+        setQrStatus('クリアするQRがありません。', 'info');
+        return;
+      }
+
+      const ok = confirm('読み取り済みQR一覧をすべてクリアします。よろしいですか？');
+      if (!ok) return;
+
+      scannedQrList = [];
+      renderQrList();
+
+      document.getElementById('registerConfirmBox').classList.add('hidden');
+      document.getElementById('registerConfirmBox').textContent = '';
+
+      setQrStatus('QR一覧をクリアしました。', 'info');
+    }
+
+    function showRegisterConfirm() {
+      const mousseType = document.getElementById('mousseType').value;
+      const lotNo = document.getElementById('lotNo').value.trim();
+      const confirmBox = document.getElementById('registerConfirmBox');
+
+      if (!mousseType) {
+        setQrStatus('ムースの種類を選択してください。', 'error');
+        return;
+      }
+
+      if (!lotNo) {
+        setQrStatus('Lotを入力してください。', 'error');
+        return;
+      }
+
+      if (scannedQrList.length === 0) {
+        setQrStatus('登録するQRがありません。', 'error');
+        return;
+      }
+
+      confirmBox.textContent =
+        '以下の内容で登録します。\n' +
+        '担当者：' + currentUserName + '\n' +
+        '部署：' + currentDepartment + '\n' +
+        'ムース種類：' + mousseType + '\n' +
+        'Lot：' + lotNo + '\n' +
+        '登録件数：' + scannedQrList.length + '件';
+      confirmBox.classList.remove('hidden');
+
+      setQrStatus('登録確認を表示しました。', 'ok');
+    }
+
+    async function saveRegisterLog() {
+      const mousseType = document.getElementById('mousseType').value;
+      const lotNo = document.getElementById('lotNo').value.trim();
+      const confirmBox = document.getElementById('registerConfirmBox');
+
+      if (!mousseType) {
+        setQrStatus('ムースの種類を選択してください。', 'error');
+        return;
+      }
+
+      if (!lotNo) {
+        setQrStatus('Lotを入力してください。', 'error');
+        return;
+      }
+
+      if (scannedQrList.length === 0) {
+        setQrStatus('記録するQRがありません。', 'error');
+        return;
+      }
+
+      try {
+        setQrStatus('保存前の重複チェック中...', 'info');
+
+        const checkRes = await jsonpRequest({
+          action: 'checkExistingQrCodes',
+          qrList: JSON.stringify(scannedQrList)
+        });
+
+        if (!checkRes.success) {
+          throw new Error(checkRes.message || '重複チェックに失敗しました。');
+        }
+
+        if (checkRes.duplicates && checkRes.duplicates.length > 0) {
+          setQrStatus(
+            '保存できません。ログシートに既に存在するQRコードがあります。\n' +
+            checkRes.duplicates.join('\n'),
+            'error'
+          );
+          return;
+        }
+
+        setQrStatus('ログへ記録中...', 'info');
+
+        const saveRes = await jsonpRequest({
+          action: 'saveCutTeamNewRegisterLog',
+          operatorName: currentUserName,
+          department: currentDepartment,
+          mode: 'QR新規登録',
+          mousseType: mousseType,
+          lotNo: lotNo,
+          qrList: JSON.stringify(scannedQrList)
+        });
+
+        if (!saveRes.success) {
+          throw new Error(saveRes.message || 'ログ記録に失敗しました。');
+        }
+
+        confirmBox.textContent =
+          'ログ記録完了\n' +
+          '担当者：' + currentUserName + '\n' +
+          '部署：' + currentDepartment + '\n' +
+          'ムース種類：' + mousseType + '\n' +
+          'Lot：' + lotNo + '\n' +
+          '記録件数：' + saveRes.count + '件';
+        confirmBox.classList.remove('hidden');
+
+        setQrStatus(saveRes.message, 'ok');
+
+        scannedQrList = [];
+        renderQrList();
+        stopCameraScan();
+        document.getElementById('qrInput').value = '';
+
+      } catch (err) {
+        setQrStatus('保存エラー\n' + getErrorMessage(err), 'error');
+      }
+    }
+
+    renderQrList();
+  </script>
+</body>
+</html>
