@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>QR照合アプリ</title>
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -32,37 +31,8 @@
     body {
       margin: 0;
       font-family: "Segoe UI", "Hiragino Sans", "Yu Gothic UI", sans-serif;
-      background: linear-gradient(180deg, #eaf2ff 0%, var(--bg) 180px);
+      background: var(--bg);
       color: var(--text);
-    }
-
-    .app-header {
-      background: linear-gradient(135deg, #1a73e8, #3b82f6);
-      color: #fff;
-      padding: 20px 16px 24px;
-      box-shadow: 0 6px 20px rgba(26, 115, 232, 0.22);
-      position: sticky;
-      top: 0;
-      z-index: 20;
-    }
-
-    .header-inner {
-      max-width: 860px;
-      margin: 0 auto;
-    }
-
-    .app-title {
-      margin: 0;
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: 0.02em;
-    }
-
-    .app-subtitle {
-      margin: 8px 0 0;
-      font-size: 14px;
-      opacity: 0.95;
-      line-height: 1.6;
     }
 
     .container {
@@ -213,12 +183,6 @@
       gap: 12px;
     }
 
-    .menu-grid-1 {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
-
     .hidden {
       display: none !important;
     }
@@ -324,53 +288,41 @@
       padding: 12px 14px;
     }
 
-    .camera-box {
+    .scanner-input-wrap {
       margin-top: 16px;
-      background: #0f172a;
-      border-radius: 20px;
-      overflow: hidden;
-      position: relative;
-      border: 2px solid #d7e1f0;
+      padding: 18px;
+      border: 2px dashed #bfd5ff;
+      border-radius: 18px;
+      background: #f7fbff;
     }
 
-    video {
-      width: 100%;
-      display: block;
-      background: #000;
-      min-height: 240px;
+    .scanner-input-label {
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: #21446c;
     }
 
-    .camera-guide {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .scanner-input-desc {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--muted);
+      margin-bottom: 12px;
+      white-space: pre-line;
     }
 
-    .camera-guide::before {
-      content: "";
-      width: 72%;
-      height: 42%;
-      border: 3px solid rgba(255,255,255,0.96);
-      border-radius: 14px;
-      box-shadow: 0 0 0 9999px rgba(0,0,0,0.22);
-    }
-
-    .camera-caption {
-      position: absolute;
-      left: 12px;
-      right: 12px;
-      bottom: 12px;
-      background: rgba(15, 23, 42, 0.72);
-      color: #fff;
-      font-size: 13px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      line-height: 1.5;
+    .scanner-input {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
       text-align: center;
-      font-weight: 700;
+      min-height: 66px;
+      background: #fff;
+    }
+
+    .scanner-input.ready {
+      border-color: #34a853;
+      box-shadow: 0 0 0 4px rgba(52, 168, 83, 0.14);
     }
 
     .qr-list {
@@ -521,10 +473,6 @@
         border-radius: 18px;
       }
 
-      .app-title {
-        font-size: 24px;
-      }
-
       h1 {
         font-size: 26px;
       }
@@ -547,17 +495,14 @@
       .step-bar {
         grid-template-columns: 1fr;
       }
+
+      .scanner-input {
+        font-size: 20px;
+      }
     }
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="header-inner">
-      <h1 class="app-title">QR照合アプリ</h1>
-      <p class="app-subtitle">タブレットでも見やすく、現場で迷いにくい画面にした版です。</p>
-    </div>
-  </header>
-
   <div class="container">
     <div id="startScreen" class="screen active">
       <div class="card hero-card">
@@ -634,7 +579,7 @@
 
         <div class="step-bar">
           <div class="step active">① 条件入力</div>
-          <div class="step active">② QR読取</div>
+          <div class="step active">② スキャナー読取</div>
           <div class="step">③ 保存</div>
         </div>
 
@@ -651,35 +596,35 @@
         </div>
 
         <div class="counter-box">
-          <div class="counter-label">現在の読み取り件数</div>
+          <div class="counter-label">現在の登録予定件数（展開後）</div>
           <div class="counter-value" id="qrCounter">0件</div>
         </div>
 
-        <div class="btn-stack">
-          <button onclick="startCameraScan()">カメラを起動して読み取る</button>
-          <button class="danger" onclick="stopCameraScan()">カメラを停止する</button>
-        </div>
-
-        <div class="small-note">GitHub Pages側でカメラを起動します。
-QRを枠内にかざすと連続で読み取ります。
-同じQRを再度読み取った場合は警告表示します。</div>
-
-        <div class="camera-box hidden" id="cameraBox">
-          <video id="video" autoplay playsinline muted></video>
-          <canvas id="scanCanvas" class="hidden"></canvas>
-          <div class="camera-guide"></div>
-          <div class="camera-caption">QRコードを白い枠の中に大きく合わせてください</div>
-        </div>
-
-        <div class="field" style="margin-top:16px;">
-          <label for="qrInput">手動入力欄（予備）</label>
+        <div class="scanner-input-wrap">
+          <div class="scanner-input-label">Bluetoothスキャナー読取欄</div>
+          <div class="scanner-input-desc">この入力欄を選択した状態で、BluetoothスキャナーでQRを読んでください。
+Box を読んだ場合は、自動で Box と lid の2種類を一覧に追加します。
+通常はスキャナーの読取後に Enter が送信される想定です。</div>
           <input
             type="text"
             id="qrInput"
-            placeholder="カメラが使えない場合はここに入力して Enter"
+            class="scanner-input"
+            placeholder="ここを選択してスキャン"
             onkeydown="handleQrInput(event)"
+            onfocus="handleScannerFocus(true)"
+            onblur="handleScannerFocus(false)"
+            autocomplete="off"
+            inputmode="text"
           >
         </div>
+
+        <div class="btn-stack">
+          <button onclick="focusQrInput()">スキャナー入力欄を選択する</button>
+        </div>
+
+        <div class="small-note">カメラは使いません。
+Bluetoothバーコードスキャナーがキーボード入力として動作する前提です。
+同じQRが今回の一覧に既にある場合は追加しません。</div>
 
         <div class="menu-grid">
           <button onclick="addQrFromInput()">手動でQRを追加</button>
@@ -689,11 +634,11 @@ QRを枠内にかざすと連続で読み取ります。
           <button class="secondary" onclick="backToCutMenu()">カットチームメニューに戻る</button>
         </div>
 
-        <div id="qrStatus" class="status info">QRを読み取るとここに結果が表示されます。</div>
+        <div id="qrStatus" class="status info">Bluetoothスキャナーを接続して、入力欄を選択した状態でQRを読み取ってください。</div>
 
         <div class="qr-list">
           <div class="qr-list-header">
-            <span>読み取り済みQR一覧</span>
+            <span>登録予定QR一覧</span>
             <span id="qrListCountText">0件</span>
           </div>
           <div id="qrListBody" class="qr-list-body"></div>
@@ -732,12 +677,6 @@ QRを枠内にかざすと連続で読み取ります。
     let currentUserName = '';
     let currentDepartment = '';
     let scannedQrList = [];
-
-    let videoStream = null;
-    let scanTimer = null;
-    let isScanning = false;
-    let lastDetectedCode = '';
-    let lastDetectedAt = 0;
     let audioContext = null;
 
     function showScreen(screenId) {
@@ -898,12 +837,10 @@ QRを枠内にかざすと連続で読み取ります。
     }
 
     function backToStart() {
-      stopCameraScan();
       showScreen('startScreen');
     }
 
     function backToCutMenu() {
-      stopCameraScan();
       document.getElementById('cutTeamInfo').textContent =
         '担当者：' + currentUserName + '\n部署：' + currentDepartment;
       showScreen('cutTeamScreen');
@@ -917,13 +854,28 @@ QRを枠内にかざすと連続で読み取ります。
       showScreen('cutNewRegisterScreen');
       loadMousseTypes();
       renderQrList();
+      setTimeout(focusQrInput, 200);
     }
 
     function openCutReRegister() {
-      stopCameraScan();
       document.getElementById('cutReRegisterInfo').textContent =
         '担当者：' + currentUserName + '\n部署：' + currentDepartment + '\nモード：再登録';
       showScreen('cutReRegisterScreen');
+    }
+
+    function focusQrInput() {
+      const input = document.getElementById('qrInput');
+      input.focus();
+      input.select();
+    }
+
+    function handleScannerFocus(isFocused) {
+      const input = document.getElementById('qrInput');
+      if (isFocused) {
+        input.classList.add('ready');
+      } else {
+        input.classList.remove('ready');
+      }
     }
 
     function handleQrInput(event) {
@@ -982,145 +934,58 @@ QRを枠内にかざすと連続で読み取ります。
       } catch (e) {}
     }
 
-    async function startCameraScan() {
-      if (!validateBeforeScan()) return;
-
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setQrStatus('この端末・ブラウザはカメラ機能に対応していません。', 'error');
-        return;
-      }
-
-      try {
-        stopCameraScan();
-
-        let stream = null;
-
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              facingMode: { ideal: 'environment' },
-              width: { ideal: 1280 },
-              height: { ideal: 720 }
-            },
-            audio: false
-          });
-        } catch (firstErr) {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: false
-          });
-        }
-
-        videoStream = stream;
-
-        const video = document.getElementById('video');
-        video.srcObject = videoStream;
-        document.getElementById('cameraBox').classList.remove('hidden');
-
-        await video.play();
-
-        isScanning = true;
-        setQrStatus('カメラを起動しました。QRを枠内にかざしてください。', 'info');
-        scanLoop();
-      } catch (err) {
-        setQrStatus(
-          'カメラ起動に失敗しました。\n' + getErrorMessage(err),
-          'error'
-        );
-      }
+    function normalizeQrValue(qrValue) {
+      return String(qrValue || '').trim();
     }
 
-    function stopCameraScan() {
-      isScanning = false;
+    function convertBoxToLid(qrValue) {
+      const text = normalizeQrValue(qrValue);
+      if (!text) return '';
 
-      if (scanTimer) {
-        clearTimeout(scanTimer);
-        scanTimer = null;
+      if (/^box/i.test(text)) {
+        return text.replace(/^box/i, 'lid');
       }
 
-      const video = document.getElementById('video');
-
-      if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-        videoStream = null;
-      }
-
-      if (video) {
-        try {
-          video.pause();
-        } catch (e) {}
-        video.srcObject = null;
-      }
-
-      document.getElementById('cameraBox').classList.add('hidden');
+      return '';
     }
 
-    function scanLoop() {
-      if (!isScanning) return;
+    function expandQrValue(qrValue) {
+      const base = normalizeQrValue(qrValue);
+      const result = [];
+      const seen = new Set();
 
-      const video = document.getElementById('video');
-      const canvas = document.getElementById('scanCanvas');
-      const ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-      try {
-        if (video.readyState >= 2) {
-          const width = video.videoWidth;
-          const height = video.videoHeight;
-
-          if (width > 0 && height > 0) {
-            canvas.width = width;
-            canvas.height = height;
-            ctx.drawImage(video, 0, 0, width, height);
-
-            const guideWidth = Math.floor(width * 0.72);
-            const guideHeight = Math.floor(height * 0.42);
-            const sx = Math.floor((width - guideWidth) / 2);
-            const sy = Math.floor((height - guideHeight) / 2);
-
-            const imageData = ctx.getImageData(sx, sy, guideWidth, guideHeight);
-            const code = jsQR(imageData.data, guideWidth, guideHeight);
-
-            if (code && code.data) {
-              const rawValue = String(code.data || '').trim();
-              if (rawValue) {
-                handleScannedQr(rawValue);
-              }
-            }
-          }
-        }
-      } catch (err) {}
-
-      scanTimer = setTimeout(scanLoop, 250);
-    }
-
-    function handleScannedQr(qrValue) {
-      const now = Date.now();
-
-      if (lastDetectedCode === qrValue && (now - lastDetectedAt) < 1500) {
-        return;
+      if (base) {
+        result.push(base);
+        seen.add(base);
       }
 
-      lastDetectedCode = qrValue;
-      lastDetectedAt = now;
+      const lidValue = convertBoxToLid(base);
+      if (lidValue && !seen.has(lidValue)) {
+        result.push(lidValue);
+        seen.add(lidValue);
+      }
 
-      addQrValue(qrValue, true);
+      return result;
     }
 
     function addQrFromInput() {
+      if (!validateBeforeScan()) return;
+
       const qrInput = document.getElementById('qrInput');
       const qrValue = qrInput.value.trim();
 
       if (!qrValue) {
         setQrStatus('QRコードが空です。', 'error');
+        focusQrInput();
         return;
       }
 
-      addQrValue(qrValue, false);
+      addQrValue(qrValue);
       qrInput.value = '';
-      qrInput.focus();
+      focusQrInput();
     }
 
-    function addQrValue(qrValue, fromCamera) {
+    function addQrValue(qrValue) {
       const mousseType = document.getElementById('mousseType').value;
       const lotNo = document.getElementById('lotNo').value.trim();
       const confirmBox = document.getElementById('registerConfirmBox');
@@ -1138,30 +1003,46 @@ QRを枠内にかざすと連続で読み取ります。
         return;
       }
 
-      if (!qrValue) {
+      const expandedValues = expandQrValue(qrValue);
+
+      if (expandedValues.length === 0) {
         setQrStatus('QRコードが空です。', 'error');
         return;
       }
 
-      if (scannedQrList.includes(qrValue)) {
-        setQrStatus('警告：このQRコードは今回の読み取り一覧に既に存在します。\n' + qrValue, 'error');
+      const alreadyExists = expandedValues.filter(value => scannedQrList.includes(value));
+      if (alreadyExists.length > 0) {
+        setQrStatus(
+          '警告：今回の読み取り一覧に既に存在するQRがあります。\n' +
+          alreadyExists.join('\n'),
+          'error'
+        );
         return;
       }
 
-      scannedQrList.push(qrValue);
+      expandedValues.forEach(value => scannedQrList.push(value));
       renderQrList();
       playBeep();
       vibrateShort();
 
-      setQrStatus(
+      const original = normalizeQrValue(qrValue);
+      const lidValue = convertBoxToLid(original);
+
+      let message =
         'QRを追加しました。\n' +
-        '読取方法：' + (fromCamera ? 'カメラ' : '手動入力') + '\n' +
         'ムース種類：' + mousseType + '\n' +
         'Lot：' + lotNo + '\n' +
-        'QR：' + qrValue + '\n' +
-        '現在件数：' + scannedQrList.length + '件',
-        'ok'
-      );
+        '読取値：' + original + '\n';
+
+      if (lidValue) {
+        message += '自動追加：' + original + '\n' + lidValue + '\n';
+      } else {
+        message += '追加値：' + original + '\n';
+      }
+
+      message += '現在件数：' + scannedQrList.length + '件';
+
+      setQrStatus(message, 'ok');
     }
 
     function renderQrList() {
@@ -1209,6 +1090,7 @@ QRを枠内にかざすと連続で読み取ります。
       document.getElementById('registerConfirmBox').textContent = '';
 
       setQrStatus('QR一覧をクリアしました。', 'info');
+      focusQrInput();
     }
 
     function showRegisterConfirm() {
@@ -1241,6 +1123,7 @@ QRを枠内にかざすと連続で読み取ります。
       confirmBox.classList.remove('hidden');
 
       setQrStatus('登録確認を表示しました。', 'ok');
+      focusQrInput();
     }
 
     async function saveRegisterLog() {
@@ -1315,8 +1198,8 @@ QRを枠内にかざすと連続で読み取ります。
 
         scannedQrList = [];
         renderQrList();
-        stopCameraScan();
         document.getElementById('qrInput').value = '';
+        focusQrInput();
 
       } catch (err) {
         setQrStatus('保存エラー\n' + getErrorMessage(err), 'error');
