@@ -458,6 +458,85 @@
       to { transform: rotate(360deg); }
     }
 
+
+    .camera-box {
+      margin-top: 16px;
+      border-radius: 18px;
+      overflow: hidden;
+      background: #0f172a;
+      border: 1px solid #d8e1ec;
+    }
+
+    .camera-box video {
+      width: 100%;
+      max-height: 420px;
+      display: block;
+      background: #0f172a;
+    }
+
+    .pair-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .pair-card {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .pair-title {
+      font-size: 13px;
+      font-weight: 900;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .pair-value {
+      min-height: 28px;
+      font-size: 18px;
+      font-weight: 900;
+      word-break: break-all;
+    }
+
+    .match-result {
+      margin-top: 14px;
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      font-weight: 900;
+      line-height: 1.7;
+      white-space: pre-line;
+    }
+
+    .match-result.ok {
+      background: var(--success-bg);
+      color: #146533;
+      border-color: #cde9d5;
+    }
+
+    .match-result.ng {
+      background: var(--danger-bg);
+      color: #b42318;
+      border-color: #f5c2c0;
+    }
+
+    .match-result.fixed {
+      background: var(--warning-bg);
+      color: #8a5a00;
+      border-color: #ffe49c;
+    }
+
+    @media (max-width: 700px) {
+      .pair-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     @media (max-width: 700px) {
       .menu-grid {
         grid-template-columns: 1fr;
@@ -544,10 +623,80 @@
         <div id="deepDrawInfo" class="info-box"></div>
 
         <div class="menu-grid">
-          <button onclick="alert('深絞り用の機能はあとで追加できます')">機能1</button>
+          <button onclick="openDeepConfirmScan()">確認スキャン</button>
           <button onclick="alert('深絞り用の機能はあとで追加できます')">機能2</button>
           <button class="secondary" onclick="backToStart()">最初に戻る</button>
         </div>
+      </div>
+    </div>
+
+
+    <div id="deepConfirmScanScreen" class="screen">
+      <div class="card">
+        <div class="section-label">確認スキャン</div>
+        <h2>深絞り - Box / lid 確認スキャン</h2>
+        <div id="deepConfirmInfo" class="info-box"></div>
+
+        <div class="step-bar">
+          <div class="step active">① 条件入力</div>
+          <div class="step active">② Box/lid読取</div>
+          <div class="step">③ ログ記録</div>
+        </div>
+
+        <div class="field">
+          <label for="deepMousseType">ムースの種類</label>
+          <select id="deepMousseType">
+            <option value="">読み込み中...</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="deepLotNo">Lot</label>
+          <input type="text" id="deepLotNo" placeholder="例：20260428A">
+        </div>
+
+        <div class="camera-box">
+          <video id="deepQrVideo" playsinline muted></video>
+        </div>
+
+        <div class="btn-stack">
+          <button onclick="startDeepCamera()">カメラを起動する</button>
+          <button class="secondary" onclick="stopDeepCamera()">カメラを停止する</button>
+        </div>
+
+        <div class="small-note">Box_000001 と lid_000001 のように、6桁番号が同じなら一致です。
+間違っている場合は下の修正欄で正しいQRに修正してからログへ記録できます。</div>
+
+        <div class="pair-grid">
+          <div class="pair-card">
+            <div class="pair-title">Box 読取値</div>
+            <div id="deepBoxValueText" class="pair-value">未読取</div>
+          </div>
+          <div class="pair-card">
+            <div class="pair-title">lid 読取値</div>
+            <div id="deepLidValueText" class="pair-value">未読取</div>
+          </div>
+        </div>
+
+        <div id="deepMatchResult" class="match-result">Box と lid をスキャンしてください。</div>
+
+        <div class="field" style="margin-top:18px;">
+          <label for="deepFixedBoxValue">修正後 Box</label>
+          <input type="text" id="deepFixedBoxValue" placeholder="例：Box_000001" oninput="checkDeepMatchByInput()">
+        </div>
+
+        <div class="field">
+          <label for="deepFixedLidValue">修正後 lid</label>
+          <input type="text" id="deepFixedLidValue" placeholder="例：lid_000001" oninput="checkDeepMatchByInput()">
+        </div>
+
+        <div class="menu-grid">
+          <button class="success" onclick="saveDeepConfirmLog()">ログへ記録する</button>
+          <button class="danger" onclick="resetDeepConfirmScan()">読み取りをクリア</button>
+          <button class="secondary" onclick="backToDeepMenu()">深絞りメニューに戻る</button>
+        </div>
+
+        <div id="deepScanStatus" class="status info">ムースの種類とLotを入力して、カメラを起動してください。</div>
       </div>
     </div>
 
@@ -864,7 +1013,372 @@ Box を読んだ場合は Box と lid の2件を自動追加します。</div>
 
       scannedQrList = [];
       lastAutoProcessedValue = '';
-      renderQrList();
+  
+    let deepQrStream = null;
+    let deepQrDetector = null;
+    let deepQrScanTimer = null;
+    let deepBoxValue = '';
+    let deepLidValue = '';
+    let deepLastDetected = '';
+
+    function setDeepStatus(message, type) {
+      const status = document.getElementById('deepScanStatus');
+      if (!status) return;
+      status.textContent = message;
+      status.className = 'status';
+
+      if (type === 'ok') {
+        status.classList.add('ok');
+      } else if (type === 'error') {
+        status.classList.add('error');
+      } else {
+        status.classList.add('info');
+      }
+    }
+
+    function setDeepMatchResult(message, type) {
+      const result = document.getElementById('deepMatchResult');
+      result.textContent = message;
+      result.className = 'match-result';
+      if (type === 'ok') result.classList.add('ok');
+      if (type === 'ng') result.classList.add('ng');
+      if (type === 'fixed') result.classList.add('fixed');
+    }
+
+    function openDeepConfirmScan() {
+      document.getElementById('deepConfirmInfo').textContent =
+        '担当者：' + currentUserName + '\n部署：' + currentDepartment + '\nモード：確認スキャン';
+
+      showScreen('deepConfirmScanScreen');
+      resetDeepConfirmScan(false);
+      loadDeepMousseTypes();
+    }
+
+    function backToDeepMenu() {
+      stopDeepCamera();
+      document.getElementById('deepDrawInfo').textContent =
+        '担当者：' + currentUserName + '\n部署：' + currentDepartment;
+      showScreen('deepDrawScreen');
+    }
+
+    async function loadDeepMousseTypes() {
+      try {
+        showLoading('ムース種類を取得中', '候補を読み込んでいます。');
+        setDeepStatus('ムース種類を取得中...', 'info');
+
+        const res = await jsonpRequest({
+          action: 'getMousseTypes'
+        });
+
+        const select = document.getElementById('deepMousseType');
+        select.innerHTML = '';
+
+        const firstOption = document.createElement('option');
+        firstOption.value = '';
+        firstOption.textContent = '選択してください';
+        select.appendChild(firstOption);
+
+        if (!res.success) {
+          throw new Error(res.message || 'ムース種類の取得に失敗しました。');
+        }
+
+        (res.types || []).forEach(type => {
+          const option = document.createElement('option');
+          option.value = type;
+          option.textContent = type;
+          select.appendChild(option);
+        });
+
+        setDeepStatus('ムース種類を取得しました。Box と lid をスキャンしてください。', 'ok');
+      } catch (err) {
+        setDeepStatus('ムース種類の取得に失敗しました。\n' + getErrorMessage(err), 'error');
+        document.getElementById('deepMousseType').innerHTML = '<option value="">取得失敗</option>';
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function normalizeDeepQr(value) {
+      return String(value || '').trim();
+    }
+
+    function getDeepQrKind(value) {
+      const text = normalizeDeepQr(value);
+      if (/^Box_\d{6}$/i.test(text)) return 'box';
+      if (/^lid_\d{6}$/i.test(text)) return 'lid';
+      return '';
+    }
+
+    function getDeepQrNumber(value) {
+      const text = normalizeDeepQr(value);
+      const match = text.match(/^(Box|lid)_(\d{6})$/i);
+      return match ? match[2] : '';
+    }
+
+    function validateDeepBeforeScan() {
+      const mousseType = document.getElementById('deepMousseType').value;
+      const lotNo = document.getElementById('deepLotNo').value.trim();
+
+      if (!mousseType) {
+        setDeepStatus('先にムースの種類を選択してください。', 'error');
+        return false;
+      }
+
+      if (!lotNo) {
+        setDeepStatus('先にLotを入力してください。', 'error');
+        return false;
+      }
+
+      return true;
+    }
+
+    async function startDeepCamera() {
+      if (!validateDeepBeforeScan()) return;
+
+      if (!('BarcodeDetector' in window)) {
+        setDeepStatus('このブラウザはBarcodeDetectorに対応していません。Chrome系ブラウザで開いてください。', 'error');
+        return;
+      }
+
+      try {
+        stopDeepCamera();
+
+        deepQrDetector = new BarcodeDetector({
+          formats: ['qr_code']
+        });
+
+        deepQrStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: 'environment' },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+
+        const video = document.getElementById('deepQrVideo');
+        video.srcObject = deepQrStream;
+        await video.play();
+
+        setDeepStatus('カメラ起動中です。Box と lid のQRコードを順番に読み取ってください。', 'ok');
+
+        deepQrScanTimer = setInterval(scanDeepQrFrame, 350);
+      } catch (err) {
+        setDeepStatus('カメラ起動に失敗しました。\n権限許可、HTTPS、Chromeブラウザを確認してください。\n' + getErrorMessage(err), 'error');
+      }
+    }
+
+    function stopDeepCamera() {
+      if (deepQrScanTimer) {
+        clearInterval(deepQrScanTimer);
+        deepQrScanTimer = null;
+      }
+
+      if (deepQrStream) {
+        deepQrStream.getTracks().forEach(track => track.stop());
+        deepQrStream = null;
+      }
+
+      const video = document.getElementById('deepQrVideo');
+      if (video) {
+        video.pause();
+        video.srcObject = null;
+      }
+    }
+
+    async function scanDeepQrFrame() {
+      const video = document.getElementById('deepQrVideo');
+      if (!video || !deepQrDetector || video.readyState < 2) return;
+
+      try {
+        const codes = await deepQrDetector.detect(video);
+        if (!codes || codes.length === 0) return;
+
+        const value = normalizeDeepQr(codes[0].rawValue);
+        if (!value) return;
+        if (value === deepLastDetected) return;
+
+        deepLastDetected = value;
+        setTimeout(() => {
+          if (deepLastDetected === value) deepLastDetected = '';
+        }, 1200);
+
+        handleDeepQrDetected(value);
+      } catch (e) {
+        // 読み取り失敗は連続で起きることがあるため画面には出しません
+      }
+    }
+
+    function handleDeepQrDetected(value) {
+      if (!validateDeepBeforeScan()) return;
+
+      const kind = getDeepQrKind(value);
+      if (!kind) {
+        setDeepStatus('QR形式が違います。\nBox_000001 または lid_000001 の形式で読み取ってください。\n読取値：' + value, 'error');
+        return;
+      }
+
+      if (kind === 'box') {
+        deepBoxValue = value;
+        document.getElementById('deepFixedBoxValue').value = value;
+      }
+
+      if (kind === 'lid') {
+        deepLidValue = value;
+        document.getElementById('deepFixedLidValue').value = value;
+      }
+
+      renderDeepPairValues();
+      playBeep();
+      vibrateShort();
+      checkDeepMatchByInput();
+
+      setDeepStatus(kind.toUpperCase() + ' を読み取りました。\n' + value, 'ok');
+    }
+
+    function renderDeepPairValues() {
+      document.getElementById('deepBoxValueText').textContent = deepBoxValue || '未読取';
+      document.getElementById('deepLidValueText').textContent = deepLidValue || '未読取';
+    }
+
+    function checkDeepMatchByInput() {
+      const boxValue = normalizeDeepQr(document.getElementById('deepFixedBoxValue').value);
+      const lidValue = normalizeDeepQr(document.getElementById('deepFixedLidValue').value);
+
+      if (!boxValue && !lidValue) {
+        setDeepMatchResult('Box と lid をスキャンしてください。', '');
+        return;
+      }
+
+      if (boxValue && getDeepQrKind(boxValue) !== 'box') {
+        setDeepMatchResult('Box欄の形式が違います。\n例：Box_000001', 'ng');
+        return;
+      }
+
+      if (lidValue && getDeepQrKind(lidValue) !== 'lid') {
+        setDeepMatchResult('lid欄の形式が違います。\n例：lid_000001', 'ng');
+        return;
+      }
+
+      if (!boxValue || !lidValue) {
+        setDeepMatchResult('片方だけ読み取り済みです。もう片方をスキャンしてください。', '');
+        return;
+      }
+
+      const boxNo = getDeepQrNumber(boxValue);
+      const lidNo = getDeepQrNumber(lidValue);
+
+      if (boxNo === lidNo) {
+        const wasFixed = boxValue !== deepBoxValue || lidValue !== deepLidValue;
+        if (wasFixed) {
+          setDeepMatchResult('修正後の内容で一致しました。\nBox：' + boxValue + '\nlid：' + lidValue, 'fixed');
+        } else {
+          setDeepMatchResult('一致しました。\nBox：' + boxValue + '\nlid：' + lidValue, 'ok');
+        }
+      } else {
+        setDeepMatchResult(
+          '不一致です。修正してください。\n' +
+          'Box番号：' + boxNo + '\n' +
+          'lid番号：' + lidNo,
+          'ng'
+        );
+      }
+    }
+
+    function resetDeepConfirmScan(showMessage) {
+      deepBoxValue = '';
+      deepLidValue = '';
+      deepLastDetected = '';
+
+      const boxInput = document.getElementById('deepFixedBoxValue');
+      const lidInput = document.getElementById('deepFixedLidValue');
+
+      if (boxInput) boxInput.value = '';
+      if (lidInput) lidInput.value = '';
+
+      renderDeepPairValues();
+      setDeepMatchResult('Box と lid をスキャンしてください。', '');
+
+      if (showMessage !== false) {
+        setDeepStatus('読み取りをクリアしました。', 'info');
+      }
+    }
+
+    async function saveDeepConfirmLog() {
+      const mousseType = document.getElementById('deepMousseType').value;
+      const lotNo = document.getElementById('deepLotNo').value.trim();
+      const fixedBoxValue = normalizeDeepQr(document.getElementById('deepFixedBoxValue').value);
+      const fixedLidValue = normalizeDeepQr(document.getElementById('deepFixedLidValue').value);
+
+      if (!mousseType) {
+        setDeepStatus('ムースの種類を選択してください。', 'error');
+        return;
+      }
+
+      if (!lotNo) {
+        setDeepStatus('Lotを入力してください。', 'error');
+        return;
+      }
+
+      if (getDeepQrKind(fixedBoxValue) !== 'box') {
+        setDeepStatus('Boxを正しい形式で入力してください。\n例：Box_000001', 'error');
+        return;
+      }
+
+      if (getDeepQrKind(fixedLidValue) !== 'lid') {
+        setDeepStatus('lidを正しい形式で入力してください。\n例：lid_000001', 'error');
+        return;
+      }
+
+      if (getDeepQrNumber(fixedBoxValue) !== getDeepQrNumber(fixedLidValue)) {
+        setDeepStatus('Boxとlidの番号が一致していません。修正してから記録してください。', 'error');
+        checkDeepMatchByInput();
+        return;
+      }
+
+      const wasFixed = fixedBoxValue !== deepBoxValue || fixedLidValue !== deepLidValue;
+
+      try {
+        showLoading('ログへ記録中', 'スプレッドシートへ保存しています。');
+        setDeepStatus('ログへ記録中...', 'info');
+
+        const saveRes = await jsonpRequest({
+          action: 'saveDeepDrawConfirmLog',
+          operatorName: currentUserName,
+          department: currentDepartment,
+          mode: '確認スキャン',
+          mousseType: mousseType,
+          lotNo: lotNo,
+          scannedBoxValue: deepBoxValue,
+          scannedLidValue: deepLidValue,
+          fixedBoxValue: fixedBoxValue,
+          fixedLidValue: fixedLidValue,
+          wasFixed: wasFixed ? 'true' : 'false'
+        });
+
+        if (!saveRes.success) {
+          throw new Error(saveRes.message || 'ログ記録に失敗しました。');
+        }
+
+        setDeepStatus(saveRes.message, 'ok');
+        setDeepMatchResult(
+          'ログ記録完了\n' +
+          'Box：' + fixedBoxValue + '\n' +
+          'lid：' + fixedLidValue + '\n' +
+          '状態：' + (wasFixed ? '修正後に記録' : '一致で記録'),
+          wasFixed ? 'fixed' : 'ok'
+        );
+
+        resetDeepConfirmScan(false);
+      } catch (err) {
+        setDeepStatus('保存エラー\n' + getErrorMessage(err), 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+
+    renderQrList();
 
       setTimeout(focusQrInput, 250);
     }
