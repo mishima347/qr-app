@@ -2,190 +2,88 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>QR管理</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<title>QR管理システム</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <style>
-body{font-family:sans-serif;background:#eef3f8;padding:15px}
-.card{background:#fff;padding:15px;border-radius:10px;margin-bottom:10px}
-button{width:100%;padding:12px;margin-top:10px}
-input,select{width:100%;padding:10px;margin-top:5px}
+:root{--bg:#f5f5f5;--card:#fff;--text:#111;--muted:#666;--line:#d7d7d7;--black:#111;--danger:#b00020;--success:#0f6b3f;--warn:#8a5a00;--shadow:0 12px 30px rgba(0,0,0,.08)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI","Hiragino Sans","Yu Gothic UI",sans-serif;background:var(--bg);color:var(--text)}
+.container{width:min(920px,100%);margin:0 auto;padding:18px 14px 40px}
+.app-header{background:#111;color:#fff;border-radius:24px;padding:22px 20px;box-shadow:var(--shadow);margin-bottom:18px}
+.app-title{font-size:26px;font-weight:900;margin:0 0 6px;letter-spacing:.02em}
+.app-subtitle{margin:0;color:#d6d6d6;font-size:14px;line-height:1.7}
+.screen{display:none}.screen.active{display:block}
+.card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:22px;box-shadow:var(--shadow);margin-bottom:18px}
+.section-label{display:inline-flex;background:#111;color:#fff;padding:7px 12px;border-radius:999px;font-size:12px;font-weight:900;margin-bottom:12px}
+h2{margin:0 0 14px;font-size:24px;line-height:1.35}.note{color:#666;line-height:1.8;font-size:14px;white-space:pre-line;margin:0 0 16px}
+.field{margin-bottom:16px}label{display:block;font-weight:900;margin-bottom:8px;font-size:14px}
+input,select,button{width:100%;min-height:58px;border-radius:16px;font-size:17px;padding:14px 15px;border:1px solid var(--line)}
+input,select{background:#fff;color:#111;outline:none}input:focus,select:focus{border-color:#111;box-shadow:0 0 0 4px rgba(0,0,0,.09)}
+button{border:none;background:#111;color:#fff;font-weight:900;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.13)}
+button:active{transform:translateY(1px)}button.secondary{background:#666}button.danger{background:#b00020}button.outline{background:#fff;color:#111;border:2px solid #111;box-shadow:none}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.info-box{background:#fafafa;border:1px solid #dedede;border-radius:18px;padding:14px;color:#333;line-height:1.7;white-space:pre-line;margin-bottom:16px;font-size:14px}
+.status{margin-top:14px;padding:14px;border-radius:18px;border:1px solid var(--line);background:#fafafa;color:#222;font-weight:800;line-height:1.7;white-space:pre-line}
+.status.ok{border-color:#b9d9c8;background:#eef8f2;color:var(--success)}.status.error{border-color:#e8b3bd;background:#fff1f3;color:var(--danger)}.status.warn{border-color:#ead7a6;background:#fff8e5;color:var(--warn)}
+.qr-list{border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-top:12px;background:#fff}
+.qr-list-header{background:#111;color:#fff;display:flex;justify-content:space-between;padding:12px 14px;font-weight:900}
+.qr-row{padding:12px 14px;border-top:1px solid #ededed;font-weight:800;word-break:break-all}.qr-row:nth-child(even){background:#fafafa}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:999}.modal.show{display:flex}
+.modal-card{width:min(560px,100%);background:#fff;border-radius:24px;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.22)}
+.modal-title{font-size:22px;font-weight:900;margin-bottom:10px}.modal-text{color:#555;line-height:1.8;white-space:pre-line;margin-bottom:16px}
+.loading{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,.72);z-index:1000}.loading.show{display:flex}
+.loading-card{background:#111;color:#fff;border-radius:22px;padding:22px;width:min(360px,90%);text-align:center;box-shadow:var(--shadow)}
+.spinner{width:36px;height:36px;border:4px solid #555;border-top:4px solid #fff;border-radius:50%;margin:0 auto 12px;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}@media(max-width:720px){.grid{grid-template-columns:1fr}.card{padding:18px;border-radius:20px}.app-title{font-size:23px}}
 </style>
 </head>
-
 <body>
+<div class="container">
+<header class="app-header"><h1 class="app-title">QR管理システム</h1><p class="app-subtitle">深絞り確認スキャン / カットチームQR登録</p></header>
 
-<div class="card">
-<h3>基本情報</h3>
-<input id="name" placeholder="担当者">
-<select id="dept">
-<option value="">選択</option>
-<option value="深絞り">深絞り</option>
-<option value="カットチーム">カットチーム</option>
-</select>
-<button onclick="start()">開始</button>
+<section id="startScreen" class="screen active"><div class="card"><div class="section-label">START</div><h2>担当者と部署を選択</h2><p class="note">最初に担当者名と部署を選択してください。部署ごとに画面を切り替えます。</p><div class="field"><label for="userName">担当者名</label><input id="userName" placeholder="例：青山"></div><div class="field"><label for="department">部署</label><select id="department"><option value="">選択してください</option><option value="深絞り">深絞り</option><option value="カットチーム">カットチーム</option></select></div><button onclick="startApp()">開始する</button></div></section>
+
+<section id="deepScreen" class="screen"><div class="card"><div class="section-label">深絞り</div><h2>確認スキャン</h2><div id="deepInfo" class="info-box"></div><p class="note">Boxとlidを両方入力またはスキャンし、スプレッドシート上の登録情報と照合します。一致すれば保存、不一致なら修正して保存します。</p><div class="field"><label for="deepMousse">今回のムース種類</label><select id="deepMousse"></select></div><div class="field"><label for="deepLot">今回のLot</label><input id="deepLot" placeholder="例：20260430A"></div><div class="field"><label for="deepBox">Box QR</label><input id="deepBox" placeholder="例：Box_000001"></div><div class="field"><label for="deepLid">lid QR</label><input id="deepLid" placeholder="例：lid_000001"></div><div class="grid"><button onclick="confirmDeep()">スプレッドシート確認・保存</button><button class="outline" onclick="clearDeep()">クリア</button><button class="secondary" onclick="backStart()">最初に戻る</button></div><div id="deepStatus" class="status">Boxとlidを入力してください。</div></div></section>
+
+<section id="cutScreen" class="screen"><div class="card"><div class="section-label">カットチーム</div><h2>QR登録・更新</h2><div id="cutInfo" class="info-box"></div><p class="note">スキャン中は通信しません。QRを1つずつ追加し、保存時にまとめて新規登録・更新判定をします。</p><div class="field"><label for="cutMousse">ムース種類</label><select id="cutMousse"></select></div><div class="field"><label for="cutLot">Lot</label><input id="cutLot" placeholder="例：20260430A"></div><div class="field"><label for="cutQrInput">QR入力欄</label><input id="cutQrInput" placeholder="Box_000001 または lid_000001" onkeydown="handleCutEnter(event)" autocomplete="off"></div><div class="grid"><button onclick="addCutQr()">QRを追加</button><button class="outline" onclick="focusCutQr()">入力欄を選択</button><button onclick="saveCut()">まとめて保存</button><button class="danger" onclick="clearCutList()">一覧クリア</button><button class="secondary" onclick="backStart()">最初に戻る</button></div><div id="cutStatus" class="status">QRを1つずつスキャンしてください。</div><div class="qr-list"><div class="qr-list-header"><span>読み取り一覧</span><span id="cutCount">0件</span></div><div id="cutList"></div></div></div></section>
 </div>
 
-<!-- 深絞り -->
-<div id="deep" class="card" style="display:none">
-<h3>深絞り</h3>
-
-<select id="deepMousse"></select>
-<input id="deepLot" placeholder="Lot">
-
-<input id="box" placeholder="Box QR">
-<input id="lid" placeholder="lid QR">
-
-<button onclick="confirmDeep()">確認・保存</button>
-</div>
-
-<!-- カット -->
-<div id="cut" class="card" style="display:none">
-<h3>カットチーム</h3>
-
-<select id="cutMousse"></select>
-<input id="cutLot" placeholder="Lot">
-
-<input id="qrInput" placeholder="スキャン">
-<button onclick="addQr()">追加</button>
-
-<div id="list"></div>
-
-<button onclick="saveCut()">保存</button>
-</div>
+<div id="fixModal" class="modal"><div class="modal-card"><div class="modal-title">登録情報が一致しません</div><div id="fixModalText" class="modal-text"></div><div class="field"><label for="fixMousse">修正後ムース種類</label><select id="fixMousse"></select></div><div class="field"><label for="fixLot">修正後Lot</label><input id="fixLot" placeholder="例：20260430A"></div><div class="grid"><button onclick="saveDeepFixed()">修正して保存</button><button class="secondary" onclick="closeFixModal()">戻る</button></div></div></div>
+<div id="loading" class="loading"><div class="loading-card"><div class="spinner"></div><div id="loadingText">処理中です</div></div></div>
 
 <script>
+const GAS = "ここにGASのデプロイURLを貼ってください";
+let currentUserName="",currentDepartment="",mousseTypes=[],cutQrList=[],latestDeepCheck=null;
 
-const GAS = "https://script.google.com/macros/s/AKfycby3xjdAFrd5-xTXccvLUjW4-mQPrC2_QHBV2_Icn5oC8YnixD9KTjlETWk2gR9BN813/exec";
+function showScreen(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.getElementById(id).classList.add("active");window.scrollTo({top:0,behavior:"smooth"})}
+function showLoading(text){document.getElementById("loadingText").textContent=text||"処理中です";document.getElementById("loading").classList.add("show")}
+function hideLoading(){document.getElementById("loading").classList.remove("show")}
+function setStatus(id,text,type){const el=document.getElementById(id);el.textContent=text;el.className="status "+(type||"")}
+async function apiGet(action){const res=await fetch(GAS+"?action="+encodeURIComponent(action));return await res.json()}
+async function apiPost(payload){const res=await fetch(GAS,{method:"POST",body:JSON.stringify(payload)});return await res.json()}
 
-let name="", dept="";
-let qrList=[];
+async function startApp(){const name=document.getElementById("userName").value.trim();const dept=document.getElementById("department").value;if(!name){alert("担当者名を入力してください。");return}if(!dept){alert("部署を選択してください。");return}currentUserName=name;currentDepartment=dept;await loadMousseTypes();if(dept==="深絞り"){document.getElementById("deepInfo").textContent="担当者："+name+"\n部署："+dept;showScreen("deepScreen")}else{document.getElementById("cutInfo").textContent="担当者："+name+"\n部署："+dept;showScreen("cutScreen");setTimeout(focusCutQr,200)}}
 
-function start(){
- name=document.getElementById("name").value;
- dept=document.getElementById("dept").value;
+async function loadMousseTypes(){if(mousseTypes.length>0)return;showLoading("ムース種類を取得中...");try{const json=await apiGet("getMousseTypes");mousseTypes=json.types||[];fillSelect("deepMousse",mousseTypes);fillSelect("cutMousse",mousseTypes);fillSelect("fixMousse",mousseTypes)}finally{hideLoading()}}
+function fillSelect(id,list){const sel=document.getElementById(id);sel.innerHTML="";const first=document.createElement("option");first.value="";first.textContent="選択してください";sel.appendChild(first);list.forEach(t=>{const op=document.createElement("option");op.value=t;op.textContent=t;sel.appendChild(op)})}
+function backStart(){showScreen("startScreen")}
+function normalize(v){return String(v||"").trim()}
+function isBox(v){return /^Box_\d{6}$/i.test(normalize(v))}
+function isLid(v){return /^lid_\d{6}$/i.test(normalize(v))}
 
- if(!name || !dept){
-  alert("入力してください");
-  return;
- }
+async function confirmDeep(){const mousse=document.getElementById("deepMousse").value;const lot=normalize(document.getElementById("deepLot").value);const box=normalize(document.getElementById("deepBox").value);const lid=normalize(document.getElementById("deepLid").value);if(!mousse){setStatus("deepStatus","ムース種類を選択してください。","error");return}if(!lot){setStatus("deepStatus","Lotを入力してください。","error");return}if(!isBox(box)){setStatus("deepStatus","Box QRの形式が違います。例：Box_000001","error");return}if(!isLid(lid)){setStatus("deepStatus","lid QRの形式が違います。例：lid_000001","error");return}showLoading("登録情報を確認中...");try{const json=await apiPost({action:"confirmAndMaybeSaveDeepDraw",operatorName:currentUserName,department:currentDepartment,inputMousseType:mousse,inputLotNo:lot,boxQr:box,lidQr:lid});latestDeepCheck=json;if(json.success===false)throw new Error(json.message||"確認に失敗しました。");if(json.matched){setStatus("deepStatus",json.message||"一致したため保存しました。","ok");clearDeep()}else{openFixModal(json,mousse,lot);setStatus("deepStatus","登録情報が一致しません。修正画面を表示しました。","error")}}catch(e){setStatus("deepStatus","通信エラー："+e.message,"error")}finally{hideLoading()}}
+function clearDeep(){document.getElementById("deepBox").value="";document.getElementById("deepLid").value=""}
+function openFixModal(json,mousse,lot){const boxInfo=json.boxInfo||{},lidInfo=json.lidInfo||{};document.getElementById("fixModalText").textContent="入力："+mousse+" / "+lot+"\n\nBox登録："+(boxInfo.mousseType||"未登録")+" / "+(boxInfo.lotNo||"未登録")+"\nlid登録："+(lidInfo.mousseType||"未登録")+" / "+(lidInfo.lotNo||"未登録")+"\n\n正しいムース種類とLotを選んで保存してください。";document.getElementById("fixMousse").value=mousse;document.getElementById("fixLot").value=lot;document.getElementById("fixModal").classList.add("show")}
+function closeFixModal(){document.getElementById("fixModal").classList.remove("show")}
+async function saveDeepFixed(){const fixedMousse=document.getElementById("fixMousse").value;const fixedLot=normalize(document.getElementById("fixLot").value);const box=normalize(document.getElementById("deepBox").value);const lid=normalize(document.getElementById("deepLid").value);if(!fixedMousse){alert("修正後ムース種類を選択してください。");return}if(!fixedLot){alert("修正後Lotを入力してください。");return}showLoading("修正内容で保存中...");try{const json=await apiPost({action:"saveDeepDrawFixedLog",operatorName:currentUserName,department:currentDepartment,fixedMousseType:fixedMousse,fixedLotNo:fixedLot,boxQr:box,lidQr:lid,checkResult:latestDeepCheck||{}});if(json.success===false)throw new Error(json.message||"保存に失敗しました。");closeFixModal();setStatus("deepStatus",json.message||"修正内容で保存しました。","ok");clearDeep()}catch(e){alert("保存エラー："+e.message)}finally{hideLoading()}}
 
- if(dept==="深絞り") document.getElementById("deep").style.display="block";
- if(dept==="カットチーム") document.getElementById("cut").style.display="block";
-
- loadMousse();
-}
-
-async function loadMousse(){
- const res = await fetch(GAS + "?action=getMousseTypes");
- const json = await res.json();
-
- const d = document.getElementById("deepMousse");
- const c = document.getElementById("cutMousse");
-
- json.types.forEach(t=>{
-  let o=document.createElement("option");
-  o.value=t;o.textContent=t;
-  d.appendChild(o);
-
-  let o2=document.createElement("option");
-  o2.value=t;o2.textContent=t;
-  c.appendChild(o2);
- });
-}
-
-/* 深絞り */
-async function confirmDeep(){
-
- const box=document.getElementById("box").value;
- const lid=document.getElementById("lid").value;
- const mousse=document.getElementById("deepMousse").value;
- const lot=document.getElementById("deepLot").value;
-
- const res = await fetch(GAS,{
-  method:"POST",
-  body:JSON.stringify({
-   action:"confirmAndMaybeSaveDeepDraw",
-   operatorName:name,
-   department:dept,
-   inputMousseType:mousse,
-   inputLotNo:lot,
-   boxQr:box,
-   lidQr:lid
-  })
- });
-
- const json = await res.json();
-
- if(json.matched){
-  alert("一致 → 保存完了");
- }else{
-  const newMousse = prompt("ムース修正", mousse);
-  const newLot = prompt("Lot修正", lot);
-
-  await fetch(GAS,{
-   method:"POST",
-   body:JSON.stringify({
-    action:"saveDeepDrawFixedLog",
-    operatorName:name,
-    department:dept,
-    fixedMousseType:newMousse,
-    fixedLotNo:newLot,
-    boxQr:box,
-    lidQr:lid
-   })
-  });
-
-  alert("修正保存完了");
- }
-}
-
-/* カット */
-function addQr(){
- const v=document.getElementById("qrInput").value.trim();
-
- if(!v) return;
-
- if(qrList.includes(v)){
-  alert("重複");
-  return;
- }
-
- qrList.push(v);
- render();
- document.getElementById("qrInput").value="";
-}
-
-function render(){
- document.getElementById("list").innerHTML=
-  qrList.map(q=>"<div>"+q+"</div>").join("");
-}
-
-async function saveCut(){
-
- const mousse=document.getElementById("cutMousse").value;
- const lot=document.getElementById("cutLot").value;
-
- const res = await fetch(GAS,{
-  method:"POST",
-  body:JSON.stringify({
-   action:"saveCutQrOptimized",
-   operatorName:name,
-   department:dept,
-   mousseType:mousse,
-   lotNo:lot,
-   qrList:qrList
-  })
- });
-
- const json = await res.json();
-
- alert(json.message);
-
- qrList=[];
- render();
-}
-
+function handleCutEnter(e){if(e.key==="Enter"){e.preventDefault();addCutQr()}}
+function focusCutQr(){const input=document.getElementById("cutQrInput");input.focus();input.select()}
+function addCutQr(){const qr=normalize(document.getElementById("cutQrInput").value);if(!qr)return;if(!isBox(qr)&&!isLid(qr)){setStatus("cutStatus","QR形式が違います。Box_000001 または lid_000001 の形式で入力してください。","error");focusCutQr();return}if(cutQrList.includes(qr)){setStatus("cutStatus","同じQRはすでに読み取り済みです。\n"+qr,"error");document.getElementById("cutQrInput").value="";focusCutQr();return}cutQrList.push(qr);renderCutList();document.getElementById("cutQrInput").value="";setStatus("cutStatus","追加しました。\n"+qr,"ok");focusCutQr()}
+function renderCutList(){const list=document.getElementById("cutList");const count=document.getElementById("cutCount");count.textContent=cutQrList.length+"件";list.innerHTML="";if(cutQrList.length===0){list.innerHTML='<div class="qr-row">まだQRはありません</div>';return}cutQrList.forEach((q,i)=>{const div=document.createElement("div");div.className="qr-row";div.textContent=(i+1)+". "+q;list.appendChild(div)})}
+function clearCutList(){if(cutQrList.length===0){setStatus("cutStatus","クリアするQRはありません。","");return}if(!confirm("読み取り一覧をクリアしますか？"))return;cutQrList=[];renderCutList();setStatus("cutStatus","一覧をクリアしました。","");focusCutQr()}
+async function saveCut(){const mousse=document.getElementById("cutMousse").value;const lot=normalize(document.getElementById("cutLot").value);if(!mousse){setStatus("cutStatus","ムース種類を選択してください。","error");return}if(!lot){setStatus("cutStatus","Lotを入力してください。","error");return}if(cutQrList.length===0){setStatus("cutStatus","保存するQRがありません。","error");return}showLoading("まとめて保存中...");try{const json=await apiPost({action:"saveCutQrOptimized",operatorName:currentUserName,department:currentDepartment,mousseType:mousse,lotNo:lot,qrList:cutQrList});if(json.success===false)throw new Error(json.message||"保存に失敗しました。");setStatus("cutStatus",json.message||"保存しました。","ok");cutQrList=[];renderCutList();focusCutQr()}catch(e){setStatus("cutStatus","通信エラー："+e.message,"error")}finally{hideLoading()}}
+renderCutList();
 </script>
 </body>
 </html>
