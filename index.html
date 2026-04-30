@@ -2,22 +2,21 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<title>QR管理</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QR管理システム</title>
-<script src="https://unpkg.com/@zxing/library@latest"></script>
 
 <style>
-body { font-family:sans-serif; background:#eef3f8; padding:15px; }
-.card { background:white; padding:15px; border-radius:12px; margin-bottom:15px; }
-button { width:100%; padding:12px; margin-top:10px; }
-input,select { width:100%; padding:10px; margin-top:5px; }
+body{font-family:sans-serif;background:#eef3f8;padding:15px}
+.card{background:#fff;padding:15px;border-radius:10px;margin-bottom:10px}
+button{width:100%;padding:12px;margin-top:10px}
+input,select{width:100%;padding:10px;margin-top:5px}
 </style>
 </head>
 
 <body>
 
 <div class="card">
-<h2>基本情報</h2>
+<h3>基本情報</h3>
 <input id="name" placeholder="担当者">
 <select id="dept">
 <option value="">選択</option>
@@ -28,21 +27,21 @@ input,select { width:100%; padding:10px; margin-top:5px; }
 </div>
 
 <!-- 深絞り -->
-<div id="deep" style="display:none" class="card">
-<h2>深絞り</h2>
+<div id="deep" class="card" style="display:none">
+<h3>深絞り</h3>
 
 <select id="deepMousse"></select>
 <input id="deepLot" placeholder="Lot">
 
-<input id="box" placeholder="Box">
-<input id="lid" placeholder="lid">
+<input id="box" placeholder="Box QR">
+<input id="lid" placeholder="lid QR">
 
 <button onclick="confirmDeep()">確認・保存</button>
 </div>
 
 <!-- カット -->
-<div id="cut" style="display:none" class="card">
-<h2>カットチーム</h2>
+<div id="cut" class="card" style="display:none">
+<h3>カットチーム</h3>
 
 <select id="cutMousse"></select>
 <input id="cutLot" placeholder="Lot">
@@ -57,7 +56,7 @@ input,select { width:100%; padding:10px; margin-top:5px; }
 
 <script>
 
-const GAS="https://script.google.com/macros/s/AKfycbx24-yizeugrVJi7a1EbD3hYJOcvZ1Ksj330F8w06i3jc7ydb-LOfNKUQwuKxF0AaIz/exec";
+const GAS = "https://script.google.com/macros/s/AKfycby3xjdAFrd5-xTXccvLUjW4-mQPrC2_QHBV2_Icn5oC8YnixD9KTjlETWk2gR9BN813/exec";
 
 let name="", dept="";
 let qrList=[];
@@ -66,6 +65,11 @@ function start(){
  name=document.getElementById("name").value;
  dept=document.getElementById("dept").value;
 
+ if(!name || !dept){
+  alert("入力してください");
+  return;
+ }
+
  if(dept==="深絞り") document.getElementById("deep").style.display="block";
  if(dept==="カットチーム") document.getElementById("cut").style.display="block";
 
@@ -73,21 +77,20 @@ function start(){
 }
 
 async function loadMousse(){
- const res=await fetch(GAS+"?action=getMousseTypes&callback=a");
- const text=await res.text();
- const json=JSON.parse(text.replace(/^a\(|\);$/g,''));
+ const res = await fetch(GAS + "?action=getMousseTypes");
+ const json = await res.json();
 
- const sel1=document.getElementById("deepMousse");
- const sel2=document.getElementById("cutMousse");
+ const d = document.getElementById("deepMousse");
+ const c = document.getElementById("cutMousse");
 
  json.types.forEach(t=>{
   let o=document.createElement("option");
   o.value=t;o.textContent=t;
-  sel1.appendChild(o);
+  d.appendChild(o);
 
   let o2=document.createElement("option");
   o2.value=t;o2.textContent=t;
-  sel2.appendChild(o2);
+  c.appendChild(o2);
  });
 }
 
@@ -99,43 +102,49 @@ async function confirmDeep(){
  const mousse=document.getElementById("deepMousse").value;
  const lot=document.getElementById("deepLot").value;
 
- const res=await fetch(GAS+"?action=confirmAndMaybeSaveDeepDraw"+
- "&operatorName="+name+
- "&department="+dept+
- "&inputMousseType="+encodeURIComponent(mousse)+
- "&inputLotNo="+lot+
- "&boxQr="+box+
- "&lidQr="+lid+
- "&callback=b");
+ const res = await fetch(GAS,{
+  method:"POST",
+  body:JSON.stringify({
+   action:"confirmAndMaybeSaveDeepDraw",
+   operatorName:name,
+   department:dept,
+   inputMousseType:mousse,
+   inputLotNo:lot,
+   boxQr:box,
+   lidQr:lid
+  })
+ });
 
- const text=await res.text();
- const json=JSON.parse(text.replace(/^b\(|\);$/g,''));
+ const json = await res.json();
 
  if(json.matched){
-  alert("一致→保存完了");
+  alert("一致 → 保存完了");
  }else{
-  const newMousse=prompt("ムース修正",mousse);
-  const newLot=prompt("Lot修正",lot);
+  const newMousse = prompt("ムース修正", mousse);
+  const newLot = prompt("Lot修正", lot);
 
-  await fetch(GAS+"?action=saveDeepDrawFixedLog"+
-  "&operatorName="+name+
-  "&department="+dept+
-  "&fixedMousseType="+encodeURIComponent(newMousse)+
-  "&fixedLotNo="+newLot+
-  "&boxQr="+box+
-  "&lidQr="+lid+
-  "&callback=c");
+  await fetch(GAS,{
+   method:"POST",
+   body:JSON.stringify({
+    action:"saveDeepDrawFixedLog",
+    operatorName:name,
+    department:dept,
+    fixedMousseType:newMousse,
+    fixedLotNo:newLot,
+    boxQr:box,
+    lidQr:lid
+   })
+  });
 
   alert("修正保存完了");
  }
 }
 
 /* カット */
-
 function addQr(){
  const v=document.getElementById("qrInput").value.trim();
 
- if(!v)return;
+ if(!v) return;
 
  if(qrList.includes(v)){
   alert("重複");
@@ -144,13 +153,12 @@ function addQr(){
 
  qrList.push(v);
  render();
-
  document.getElementById("qrInput").value="";
 }
 
 function render(){
  document.getElementById("list").innerHTML=
- qrList.map(q=>"<div>"+q+"</div>").join("");
+  qrList.map(q=>"<div>"+q+"</div>").join("");
 }
 
 async function saveCut(){
@@ -158,16 +166,19 @@ async function saveCut(){
  const mousse=document.getElementById("cutMousse").value;
  const lot=document.getElementById("cutLot").value;
 
- const res=await fetch(GAS+"?action=saveCutQrOptimized"+
- "&operatorName="+name+
- "&department="+dept+
- "&mousseType="+encodeURIComponent(mousse)+
- "&lotNo="+lot+
- "&qrList="+encodeURIComponent(JSON.stringify(qrList))+
- "&callback=d");
+ const res = await fetch(GAS,{
+  method:"POST",
+  body:JSON.stringify({
+   action:"saveCutQrOptimized",
+   operatorName:name,
+   department:dept,
+   mousseType:mousse,
+   lotNo:lot,
+   qrList:qrList
+  })
+ });
 
- const text=await res.text();
- const json=JSON.parse(text.replace(/^d\(|\);$/g,''));
+ const json = await res.json();
 
  alert(json.message);
 
