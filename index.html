@@ -62,6 +62,16 @@ const GAS = "https://script.google.com/macros/s/AKfycbyiII55v_YmEfSKB-mI2aw55uJV
 let currentUserName="",currentDepartment="",mousseTypes=[],cutQrList=[],latestDeepCheck=null;
 let deepBoxValue="",deepLidValue="",deepStream=null,zxingReader=null,deepBarcodeDetector=null,deepDetecting=false,deepLastDetected="",cutAutoTimer=null,cutLastAutoValue="";
 
+// 【高速化設定】カメラ解像度の強制固定
+const CAMERA_CONSTRAINTS = {
+    video: {
+        facingMode: { ideal: "environment" },
+        width: { exact: 1280 }, 
+        height: { exact: 720 }
+    },
+    audio: false
+};
+
 function showScreen(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.getElementById(id).classList.add("active");window.scrollTo({top:0,behavior:"smooth"})}
 function showLoading(text){document.getElementById("loadingText").textContent=text||"処理中です";document.getElementById("loading").classList.add("show")}
 function hideLoading(){document.getElementById("loading").classList.remove("show")}
@@ -78,9 +88,63 @@ function isBox(v){return /^Box_\d{6}$/i.test(normalize(v))}
 function isLid(v){return /^lid_\d{6}$/i.test(normalize(v))}
 function qrKind(v){if(isBox(v))return"box";if(isLid(v))return"lid";return""}
 
-/* 深絞り：カメラ */
-async function startDeepCamera(){const mousse=document.getElementById("deepMousse").value;const lot=normalize(document.getElementById("deepLot").value);if(!mousse){setStatus("deepStatus","先にムース種類を選択してください。","error");return}if(!lot){setStatus("deepStatus","先にLotを入力してください。","error");return}try{stopDeepCamera();const video=document.getElementById("deepVideo");if("BarcodeDetector" in window){deepStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}},audio:false});video.srcObject=deepStream;await video.play();deepBarcodeDetector=new BarcodeDetector({formats:["qr_code"]});deepDetecting=true;requestAnimationFrame(deepDetectLoop)}else{zxingReader=new ZXing.BrowserQRCodeReader();const devices=await zxingReader.getVideoInputDevices();const back=devices.find(d=>/back|rear|environment/i.test(d.label));await zxingReader.decodeFromVideoDevice(back?back.deviceId:null,video,(result,err)=>{if(result)handleDeepDetected(result.text)})}setStatus("deepStatus","カメラ起動中。Boxとlidを読み取ってください。","ok")}catch(e){setStatus("deepStatus","カメラ起動に失敗しました。HTTPS、カメラ権限、Chromeを確認してください。\n"+e.message,"error")}}
-async function deepDetectLoop(){if(!deepDetecting||!deepBarcodeDetector)return;const video=document.getElementById("deepVideo");try{if(video&&video.readyState>=2){const codes=await deepBarcodeDetector.detect(video);if(codes&&codes[0])handleDeepDetected(codes[0].rawValue)}}catch(e){}if(deepDetecting)requestAnimationFrame(deepDetectLoop)}
+/* 深絞り：カメラ（高速化修正版） */
+async function startDeepCamera(){
+    const mousse=document.getElementById("deepMousse").value;
+    const lot=normalize(document.getElementById("deepLot").value);
+    if(!mousse){setStatus("deepStatus","先にムース種類を選択してください。","error");return}
+    if(!lot){setStatus("deepStatus","先にLotを入力してください。","error");return}
+    
+    try {
+        stopDeepCamera();
+        const video=document.getElementById("deepVideo");
+        
+        deepStream=await navigator.mediaDevices.getUserMedia(CAMERA_CONSTRAINTS);
+        video.srcObject=deepStream;
+        await video.play();
+
+        if("BarcodeDetector" in window){
+            deepBarcodeDetector=new BarcodeDetector({formats:["qr_code"]});
+            deepDetecting=true;
+            deepDetectLoop(); // requestAnimationFrameから変更
+        } else {
+            zxingReader=new ZXing.BrowserQRCodeReader();
+            zxingReader.decodeFromStream(deepStream,video,(result,err)=>{
+                if(result)handleDeepDetected(result.text)
+            });
+        }
+        setStatus("deepStatus","カメラ起動中。Boxとlidを読み取ってください。","ok");
+    } catch(e) {
+        // 解像度固定(exact)に非対応の端末用フォールバック
+        if(e.name === 'ConstraintNotSatisfiedError' || e.name === 'OverconstrainedError'){
+            console.warn("指定解像度に非対応のためフォールバックします。");
+            CAMERA_CONSTRAINTS.video.width = { ideal: 1280 };
+            CAMERA_CONSTRAINTS.video.height = { ideal: 720 };
+            startDeepCamera();
+            return;
+        }
+        setStatus("deepStatus","カメラ起動に失敗しました。HTTPS、カメラ権限、Chromeを確認してください。\n"+e.message,"error");
+    }
+}
+
+/* 深絞り：解析ループ（高速化修正版） */
+async function deepDetectLoop(){
+    if(!deepDetecting||!deepBarcodeDetector)return;
+    const video=document.getElementById("deepVideo");
+    
+    try{
+        if(video&&video.readyState>=2){
+            const codes=await deepBarcodeDetector.detect(video);
+            if(codes&&codes[0])handleDeepDetected(codes[0].rawValue);
+        }
+    }catch(e){}
+    
+    // スキャン間隔を150ms（1秒間に約6.6回）に間引くことでCPU負荷を下げピントを合わせやすくする
+    if(deepDetecting){
+        setTimeout(deepDetectLoop, 150); 
+    }
+}
+
 function stopDeepCamera(){deepDetecting=false;deepBarcodeDetector=null;if(zxingReader){try{zxingReader.reset()}catch(e){}zxingReader=null}if(deepStream){deepStream.getTracks().forEach(t=>t.stop());deepStream=null}const video=document.getElementById("deepVideo");if(video){video.pause();video.srcObject=null}}
 function handleDeepDetected(value){const qr=normalize(value);if(!qr)return;if(qr===deepLastDetected)return;deepLastDetected=qr;setTimeout(()=>{if(deepLastDetected===qr)deepLastDetected=""},1200);const kind=qrKind(qr);if(!kind){setStatus("deepStatus","QR形式が違います。Box_000001 または lid_000001 の形式で読み取ってください。\n読取値："+qr,"error");return}if(kind==="box"){deepBoxValue=qr;document.getElementById("deepBox").value=qr}else{deepLidValue=qr;document.getElementById("deepLid").value=qr}renderDeepValues();setStatus("deepStatus",(kind==="box"?"Box":"lid")+"を読み取りました。\n"+qr,(deepBoxValue&&deepLidValue)?"ok":"warn")}
 function renderDeepValues(){document.getElementById("deepBoxText").textContent=deepBoxValue||"未読取";document.getElementById("deepLidText").textContent=deepLidValue||"未読取"}
